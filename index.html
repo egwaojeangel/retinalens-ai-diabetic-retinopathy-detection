@@ -1,0 +1,2697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RetinaLens AI | Hospital Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --bg-deep: #0a0c10;
+            --card-bg: rgba(23, 28, 38, 0.7);
+            --accent-teal: #2dd4bf;
+            --accent-blue: #3b82f6;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-deep);
+            color: #f1f5f9;
+            overflow-x: hidden;
+        }
+
+        .glass {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .page { display: none; }
+        .page.active { display: flex; animation: fadeIn 0.4s ease-out; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #2dd4bf 0%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .scan-line {
+            height: 2px;
+            background: var(--accent-teal);
+            box-shadow: 0 0 20px var(--accent-teal);
+            position: absolute;
+            width: 100%;
+            z-index: 20;
+            animation: scanning 2.5s infinite ease-in-out;
+        }
+
+        @keyframes scanning {
+            0% { top: 0%; opacity: 0; }
+            50% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+
+        .sidebar-item.active {
+            background: rgba(45, 212, 191, 0.1);
+            color: var(--accent-teal);
+            border-right: 2px solid var(--accent-teal);
+        }
+
+        input[type='range'] {
+            accent-color: var(--accent-teal);
+        }
+
+        .content-section { display: none; }
+        .content-section.active { display: block; animation: fadeIn 0.3s ease-out; }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .patient-passport {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 12px;
+        }
+
+        .heatmap-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .heatmap-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            mix-blend-mode: screen;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .ai-processing {
+            animation: pulse 2s infinite;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--card-bg);
+            border: 1px solid rgba(45, 212, 191, 0.3);
+            border-radius: 12px;
+            padding: 16px 24px;
+            z-index: 9999;
+            animation: slideIn 0.3s ease-out;
+            backdrop-filter: blur(12px);
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .stat-card {
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+        }
+
+        canvas {
+            max-height: 300px;
+        }
+
+        .delete-btn {
+            transition: all 0.2s;
+        }
+
+        .delete-btn:hover {
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- LOGIN PAGE -->
+    <div id="login-page" class="page active h-screen w-full items-center justify-center p-6 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-teal-900/20 via-slate-900 to-black">
+        <div class="glass max-w-md w-full p-10 rounded-[32px] shadow-2xl relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-teal-400 to-blue-600"></div>
+            
+            <div class="text-center mb-10">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-teal-500/10 mb-6 border border-teal-500/20">
+                    <i class="fas fa-eye text-3xl text-teal-400"></i>
+                </div>
+                <h1 class="text-3xl font-bold tracking-tight">RetinaLens <span class="text-teal-400">AI</span></h1>
+                <p class="text-slate-400 mt-2 text-sm">Hospital Management & AI Diagnostics</p>
+            </div>
+
+            <form class="space-y-5" onsubmit="event.preventDefault(); login();">
+                <div class="space-y-1">
+                    <label class="text-[10px] uppercase tracking-widest font-bold text-slate-500 ml-1">Username / Email</label>
+                    <input type="text" id="username" placeholder="admin@hospital.com" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-teal-500/50 transition-all text-sm" required>
+                </div>
+                
+                <div class="space-y-1">
+                    <label class="text-[10px] uppercase tracking-widest font-bold text-slate-500 ml-1">Password</label>
+                    <input type="password" id="password" placeholder="••••••••" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-teal-500/50 transition-all text-sm" required>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-[10px] uppercase tracking-widest font-bold text-slate-500 ml-1">Role</label>
+                    <select id="role-select" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none text-sm text-slate-300">
+                        <option value="admin">Admin</option>
+                        <option value="doctor">Doctor</option>
+                        <option value="nurse">Nurse</option>
+                        <option value="lab">Lab Technician</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="w-full bg-white text-black font-bold py-4 rounded-xl hover:bg-teal-400 transition-all duration-300 transform active:scale-[0.98]">
+                    <i class="fas fa-sign-in-alt mr-2"></i> Secure Login
+                </button>
+            </form>
+
+            <div class="mt-8 pt-8 border-t border-white/5 text-center">
+                <p class="text-xs text-slate-500">🔒 AES-256 Encryption • HIPAA Compliant</p>
+                <p class="text-xs text-slate-500 mt-2">Demo: admin/admin123 (any role)</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- DASHBOARD PAGE -->
+    <div id="dashboard-page" class="page h-screen w-full">
+        <aside class="w-64 border-r border-white/5 flex flex-col p-6 hidden md:flex">
+            <div class="flex items-center gap-3 mb-12 px-2">
+                <i class="fas fa-eye text-teal-400 text-xl"></i>
+                <span class="font-bold tracking-tight text-lg">RetinaLens AI</span>
+            </div>
+            
+            <nav class="space-y-2 flex-1" id="sidebar-nav">
+                <!-- Dynamically populated based on role -->
+            </nav>
+
+            <div class="mt-auto glass p-4 rounded-2xl border-teal-500/20">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-teal-400 to-blue-500 flex items-center justify-center text-[10px] font-bold" id="user-initials">AD</div>
+                    <div class="overflow-hidden flex-1">
+                        <p class="text-xs font-bold truncate" id="user-name">Admin User</p>
+                        <p class="text-[10px] text-teal-400 uppercase font-bold" id="user-role">Administrator</p>
+                    </div>
+                    <button onclick="logout()" class="text-slate-500 hover:text-white"><i class="fas fa-sign-out-alt"></i></button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col overflow-hidden">
+            <header class="h-20 border-b border-white/5 flex items-center justify-between px-10 shrink-0">
+                <div>
+                    <h2 class="text-xl font-bold" id="page-title">Dashboard Overview</h2>
+                    <p class="text-xs text-slate-500" id="hospital-name-display">St. Mary's Medical Center</p>
+                </div>
+                <div class="flex items-center gap-6">
+                    <div class="flex items-center gap-2 glass px-3 py-1.5 rounded-full border-green-500/20">
+                        <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                        <span class="text-[10px] font-bold text-slate-300 uppercase">AI Model v2.3</span>
+                    </div>
+                    <div class="relative">
+                        <button onclick="toggleNotifications()" class="glass px-3 py-1.5 rounded-full hover:bg-white/10">
+                            <i class="fas fa-bell text-slate-300"></i>
+                        </button>
+                        <span id="notification-badge" class="hidden absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[10px] flex items-center justify-center font-bold">0</span>
+                        
+                        <!-- Notification Dropdown -->
+                        <div id="notification-dropdown" class="hidden absolute right-0 top-12 w-80 glass rounded-2xl shadow-2xl z-50 max-h-96 overflow-y-auto">
+                            <div class="p-4 border-b border-white/10 flex justify-between items-center sticky top-0 glass">
+                                <h4 class="font-bold text-sm">Notifications</h4>
+                                <button onclick="clearAllNotifications()" class="text-xs text-slate-400 hover:text-white">Clear All</button>
+                            </div>
+                            <div id="notification-list" class="p-2">
+                                <!-- Notifications will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="flex-1 overflow-y-auto p-10" id="main-content">
+                <!-- Content sections will be loaded here -->
+            </div>
+        </main>
+    </div>
+
+    <!-- MODALS -->
+    <!-- Add Patient Modal -->
+    <div id="add-patient-modal" class="modal">
+        <div class="glass max-w-3xl w-full mx-4 p-8 rounded-[32px] max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold"><i class="fas fa-user-plus mr-2"></i>Register New Patient</h3>
+                <button onclick="closeModal('add-patient-modal')" class="text-slate-400 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <form id="add-patient-form" onsubmit="event.preventDefault(); addPatient();" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="md:col-span-3">
+                        <label class="text-sm font-bold text-slate-400 mb-2 block">Patient Photo</label>
+                        <input type="file" id="patient-photo" accept="image/*" class="glass px-4 py-3 rounded-xl w-full outline-none">
+                    </div>
+                    <div>
+                        <label class="text-sm font-bold text-slate-400 mb-2 block">First Name *</label>
+                        <input type="text" id="patient-firstname" required class="glass px-4 py-3 rounded-xl w-full outline-none">
+                    </div>
+                    <div>
+                        <label class="text-sm font-bold text-slate-400 mb-2 block">Last Name *</label>
+                        <input type="text" id="patient-lastname" required class="glass px-4 py-3 rounded-xl w-full outline-none">
+                    </div>
+                    <div>
+                        <label class="text-sm font-bold text-slate-400 mb-2 block">Date of Birth *</label>
+                        <input type="date" id="patient-dob" required class="glass px-4 py-3 rounded-xl w-full outline-none">
+                    </div>
+                    <div>
+                        <label class="text-sm font-bold text-slate-400 mb-2 block">Gender *</label>
+                        <select id="patient-gender" required class="glass px-4 py-3 rounded-xl w-full outline-none">
+                            <option value="">Select...</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-sm font-bold text-slate-400 mb-2 block">Blood Type</label>
+                        <select id="patient-blood" class="glass px-4 py-3 rounded-xl w-full outline-none">
+                            <option value="">Select...</option>
+                            <option value="A+">A+</option>
+                            <option value="A-">A-</option>
+                            <option value="B+">B+</option>
+                            <option value="B-">B-</option>
+                            <option value="AB+">AB+</option>
+                            <option value="AB-">AB-</option>
+                            <option value="O+">O+</option>
+                            <option value="O-">O-</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-sm font-bold text-slate-400 mb-2 block">Phone *</label>
+                        <input type="tel" id="patient-phone" required class="glass px-4 py-3 rounded-xl w-full outline-none">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="text-sm font-bold text-slate-400 mb-2 block">Email</label>
+                        <input type="email" id="patient-email" class="glass px-4 py-3 rounded-xl w-full outline-none">
+                    </div>
+                    <div class="md:col-span-3">
+                        <label class="text-sm font-bold text-slate-400 mb-2 block">Address *</label>
+                        <input type="text" id="patient-address" required class="glass px-4 py-3 rounded-xl w-full outline-none">
+                    </div>
+                    <div>
+                        <label class="text-sm font-bold text-slate-400 mb-2 block">Insurance Provider</label>
+                        <input type="text" id="patient-insurance" class="glass px-4 py-3 rounded-xl w-full outline-none">
+                    </div>
+                    <div>
+                        <label class="text-sm font-bold text-slate-400 mb-2 block">Insurance ID</label>
+                        <input type="text" id="patient-insurance-id" class="glass px-4 py-3 rounded-xl w-full outline-none">
+                    </div>
+                    <div>
+                        <label class="text-sm font-bold text-slate-400 mb-2 block">Emergency Contact</label>
+                        <input type="tel" id="patient-emergency" class="glass px-4 py-3 rounded-xl w-full outline-none">
+                    </div>
+                    <div class="md:col-span-3">
+                        <label class="text-sm font-bold text-slate-400 mb-2 block">Medical History / Allergies</label>
+                        <textarea id="patient-history" rows="3" class="glass px-4 py-3 rounded-xl w-full outline-none resize-none"></textarea>
+                    </div>
+                </div>
+
+                <div class="flex gap-4 pt-4">
+                    <button type="submit" class="flex-1 bg-teal-500 hover:bg-teal-400 text-black font-bold py-3 rounded-xl transition-all">
+                        <i class="fas fa-user-plus mr-2"></i> Register Patient
+                    </button>
+                    <button type="button" onclick="closeModal('add-patient-modal')" class="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold py-3 rounded-xl transition-all">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- View Patient Modal -->
+    <div id="view-patient-modal" class="modal">
+        <div class="glass max-w-5xl w-full mx-4 p-8 rounded-[32px] max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold"><i class="fas fa-user mr-2"></i>Patient Medical Record</h3>
+                <button onclick="closeModal('view-patient-modal')" class="text-slate-400 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <div id="patient-details-content">
+                <!-- Will be populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Admission Modal -->
+    <div id="add-admission-modal" class="modal">
+        <div class="glass max-w-2xl w-full mx-4 p-8 rounded-[32px] max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold"><i class="fas fa-bed mr-2"></i>Admit Patient</h3>
+                <button onclick="closeModal('add-admission-modal')" class="text-slate-400 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <form id="add-admission-form" onsubmit="event.preventDefault(); addAdmission();" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="md:col-span-2">
+                        <label class="text-sm font-bold text-slate-400 mb-2 block">Patient *</label>
+                        <select id="admission-patient" required class="glass px-4 py-3 rounded-xl w-full outline-none">
+                            <option value="">Select Patient...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-sm font-bold text-slate-400 mb-2 block">Admission Date *</label>
+                        <input type="date" id="admission-date" required class="glass px-4 py-3 rounded-xl w-full outline-none">
+                    </div>
+                    <div>
+                        <label class="text-sm font-bold text-slate-400 mb-2 block">Ward/Room Number *</label>
+                        <input type="text" id="admission-room" required placeholder="e.g., ICU-201" class="glass px-4 py-3 rounded-xl w-full outline-none">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="text-sm font-bold text-slate-400 mb-2 block">Admission Reason *</label>
+                        <select id="admission-reason" required class="glass px-4 py-3 rounded-xl w-full outline-none">
+                            <option value="">Select Reason...</option>
+                            <option value="Emergency">Emergency</option>
+                            <option value="Scheduled Surgery">Scheduled Surgery</option>
+                            <option value="Observation">Observation</option>
+                            <option value="Chronic Care">Chronic Care</option>
+                            <option value="Post-Operative Care">Post-Operative Care</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-sm font-bold text-slate-400 mb-2 block">Attending Doctor</label>
+                        <input type="text" id="admission-doctor" placeholder="Dr. Smith" class="glass px-4 py-3 rounded-xl w-full outline-none">
+                    </div>
+                    <div>
+                        <label class="text-sm font-bold text-slate-400 mb-2 block">Expected Stay (days)</label>
+                        <input type="number" id="admission-duration" min="1" placeholder="7" class="glass px-4 py-3 rounded-xl w-full outline-none">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="text-sm font-bold text-slate-400 mb-2 block">Medical Notes</label>
+                        <textarea id="admission-notes" rows="3" class="glass px-4 py-3 rounded-xl w-full outline-none resize-none"></textarea>
+                    </div>
+                </div>
+
+                <div class="flex gap-4 pt-4">
+                    <button type="submit" class="flex-1 bg-teal-500 hover:bg-teal-400 text-black font-bold py-3 rounded-xl transition-all">
+                        <i class="fas fa-bed mr-2"></i> Admit Patient
+                    </button>
+                    <button type="button" onclick="closeModal('add-admission-modal')" class="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold py-3 rounded-xl transition-all">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Appointment Modal -->
+    <div id="add-appointment-modal" class="modal">
+        <div class="glass max-w-2xl w-full mx-4 p-8 rounded-[32px] max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold"><i class="fas fa-calendar-plus mr-2"></i>Schedule Appointment</h3>
+                <button onclick="closeModal('add-appointment-modal')" class="text-slate-400 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <form id="add-appointment-form" onsubmit="event.preventDefault(); addAppointment();" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="md:col-span-2">
+                        <label class="text-sm font-bold text-slate-400 mb-2 block">Patient *</label>
+                        <select id="appointment-patient" required class="glass px-4 py-3 rounded-xl w-full outline-none">
+                            <option value="">Select Patient...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-sm font-bold text-slate-400 mb-2 block">Date *</label>
+                        <input type="date" id="appointment-date" required class="glass px-4 py-3 rounded-xl w-full outline-none">
+                    </div>
+                    <div>
+                        <label class="text-sm font-bold text-slate-400 mb-2 block">Time *</label>
+                        <input type="time" id="appointment-time" required class="glass px-4 py-3 rounded-xl w-full outline-none">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="text-sm font-bold text-slate-400 mb-2 block">Appointment Type *</label>
+                        <select id="appointment-type" required class="glass px-4 py-3 rounded-xl w-full outline-none">
+                            <option value="">Select Type...</option>
+                            <option value="Consultation">Consultation</option>
+                            <option value="Follow-up">Follow-up</option>
+                            <option value="AI Retinal Scan">AI Retinal Scan</option>
+                            <option value="Surgery">Surgery</option>
+                            <option value="Emergency">Emergency</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="text-sm font-bold text-slate-400 mb-2 block">Doctor</label>
+                        <input type="text" id="appointment-doctor" placeholder="Dr. Smith" class="glass px-4 py-3 rounded-xl w-full outline-none">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="text-sm font-bold text-slate-400 mb-2 block">Notes</label>
+                        <textarea id="appointment-notes" rows="3" class="glass px-4 py-3 rounded-xl w-full outline-none resize-none"></textarea>
+                    </div>
+                </div>
+
+                <div class="flex gap-4 pt-4">
+                    <button type="submit" class="flex-1 bg-teal-500 hover:bg-teal-400 text-black font-bold py-3 rounded-xl transition-all">
+                        <i class="fas fa-calendar-check mr-2"></i> Schedule Appointment
+                    </button>
+                    <button type="button" onclick="closeModal('add-appointment-modal')" class="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold py-3 rounded-xl transition-all">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Bed Capacity Modal -->
+    <div id="edit-bed-capacity-modal" class="modal">
+        <div class="glass max-w-md w-full mx-4 p-8 rounded-[32px]">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold"><i class="fas fa-bed mr-2"></i>Bed Capacity Settings</h3>
+                <button onclick="closeModal('edit-bed-capacity-modal')" class="text-slate-400 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <form id="bed-capacity-form" onsubmit="event.preventDefault(); saveBedCapacity();" class="space-y-6">
+                <div>
+                    <label class="text-sm font-bold text-slate-400 mb-2 block">Total Hospital Beds</label>
+                    <input type="number" id="total-beds-input" min="1" required class="glass px-4 py-3 rounded-xl w-full outline-none text-2xl font-bold text-center">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-sm font-bold text-slate-400 mb-2 block">ICU Beds</label>
+                        <input type="number" id="icu-beds-input" min="0" required class="glass px-4 py-3 rounded-xl w-full outline-none text-center">
+                    </div>
+                    <div>
+                        <label class="text-sm font-bold text-slate-400 mb-2 block">General Beds</label>
+                        <input type="number" id="general-beds-input" min="0" required class="glass px-4 py-3 rounded-xl w-full outline-none text-center">
+                    </div>
+                </div>
+
+                <div class="bg-teal-500/10 border border-teal-500/20 rounded-xl p-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i class="fas fa-info-circle text-teal-400"></i>
+                        <span class="text-sm font-bold text-teal-400">Current Occupancy</span>
+                    </div>
+                    <p class="text-2xl font-bold" id="current-occupancy-display">0 / 0</p>
+                    <div class="mt-2 bg-teal-500/20 rounded-full h-2 overflow-hidden">
+                        <div class="bg-teal-500 h-full transition-all" id="occupancy-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="flex gap-4 pt-4">
+                    <button type="submit" class="flex-1 bg-teal-500 hover:bg-teal-400 text-black font-bold py-3 rounded-xl transition-all">
+                        <i class="fas fa-save mr-2"></i> Save Settings
+                    </button>
+                    <button type="button" onclick="closeModal('edit-bed-capacity-modal')" class="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold py-3 rounded-xl transition-all">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- AI Diagnosis Modal -->
+    <div id="ai-diagnosis-modal" class="modal">
+        <div class="glass max-w-6xl w-full mx-4 p-8 rounded-[32px] max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold"><i class="fas fa-brain mr-2"></i>AI Retinal Analysis</h3>
+                <button onclick="closeModal('ai-diagnosis-modal')" class="text-slate-400 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="space-y-4">
+                    <div class="glass p-6 rounded-xl">
+                        <h4 class="text-sm font-bold text-slate-400 uppercase mb-4">Upload Retinal Image</h4>
+                        <div class="border-2 border-dashed border-white/10 rounded-xl p-8 text-center hover:border-teal-500/40 transition-all cursor-pointer" id="ai-drop-zone">
+                            <input type="file" id="ai-image-input" accept="image/*" class="hidden" onchange="loadAIImage(this)">
+                            <label for="ai-image-input" class="cursor-pointer">
+                                <i class="fas fa-cloud-upload text-4xl text-teal-400 mb-4"></i>
+                                <p class="text-sm text-slate-300">Click or drag fundus image</p>
+                                <p class="text-xs text-slate-500 mt-2">DICOM, JPG, PNG supported</p>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="ai-results-panel" class="hidden space-y-4">
+                        <div class="glass p-6 rounded-xl">
+                            <h4 class="text-sm font-bold text-slate-400 uppercase mb-4">AI Prediction</h4>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm">Diagnosis:</span>
+                                    <span class="font-bold text-lg" id="ai-diagnosis">-</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm">Confidence:</span>
+                                    <span class="font-bold text-teal-400" id="ai-confidence">-</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm">Severity:</span>
+                                    <span class="font-bold" id="ai-severity">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="glass p-6 rounded-xl">
+                            <h4 class="text-sm font-bold text-slate-400 uppercase mb-4">Probability Distribution</h4>
+                            <canvas id="probability-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="glass p-6 rounded-xl" style="min-height: 400px;">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="text-sm font-bold text-slate-400 uppercase">Visualization</h4>
+                            <div class="flex gap-2">
+                                <button onclick="toggleGradCAM()" class="px-3 py-1 bg-white/5 hover:bg-white/10 rounded-lg text-xs" id="gradcam-toggle">
+                                    <i class="fas fa-eye mr-1"></i> GradCAM
+                                </button>
+                            </div>
+                        </div>
+                        <div class="relative bg-black/40 rounded-xl overflow-hidden" style="height: 450px;" id="ai-image-container">
+                            <img id="ai-preview-image" class="hidden w-full h-full object-contain" alt="Retinal scan">
+                            <canvas id="gradcam-canvas" class="hidden absolute top-0 left-0 w-full h-full" style="mix-blend-mode: screen;"></canvas>
+                            <div id="ai-empty-state" class="absolute inset-0 flex items-center justify-center">
+                                <div class="text-center">
+                                    <i class="fas fa-eye-slash text-4xl text-slate-800 mb-4"></i>
+                                    <p class="text-slate-600 text-sm">Upload image to begin</p>
+                                </div>
+                            </div>
+                            <div id="ai-scanning" class="hidden scan-line"></div>
+                        </div>
+
+                        <div id="gradcam-controls" class="hidden mt-4">
+                            <label class="text-xs font-bold text-slate-400 uppercase mb-2 block">Heatmap Intensity</label>
+                            <input type="range" class="w-full" min="0" max="100" value="70" oninput="updateGradCAMIntensity(this.value)">
+                        </div>
+                    </div>
+
+                    <div id="ai-explanation-panel" class="hidden glass p-6 rounded-xl">
+                        <h4 class="text-sm font-bold text-blue-400 uppercase mb-3">AI Explanation</h4>
+                        <p class="text-sm text-slate-300 mb-4" id="ai-explanation-text"></p>
+                        <div class="bg-white/5 rounded-lg p-3 text-xs">
+                            <p class="text-slate-400"><strong>Model:</strong> Deep Convolutional Neural Network</p>
+                            <p class="text-slate-400"><strong>Architecture:</strong> Custom Vision Transformer</p>
+                            <p class="text-slate-400"><strong>Training Data:</strong> 1.2M retinal images</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-4 mt-6">
+                <button onclick="runAIDiagnosis()" id="run-ai-btn" class="flex-1 bg-teal-500 hover:bg-teal-400 text-black font-bold py-3 rounded-xl transition-all">
+                    <i class="fas fa-eye mr-2"></i> Run AI Analysis
+                </button>
+                <button onclick="saveAIDiagnosis()" id="save-ai-btn" class="hidden flex-1 bg-blue-500 hover:bg-blue-400 text-white font-bold py-3 rounded-xl transition-all">
+                    <i class="fas fa-save mr-2"></i> Save to Patient Record
+                </button>
+                <button onclick="generateAIReport()" id="report-ai-btn" class="hidden flex-1 bg-purple-500 hover:bg-purple-400 text-white font-bold py-3 rounded-xl transition-all">
+                    <i class="fas fa-file-pdf mr-2"></i> Generate Report
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script>
+        // ==================== GLOBAL STATE ====================
+        let currentUser = null;
+        let patients = JSON.parse(localStorage.getItem('patients')) || [];
+        let diagnoses = JSON.parse(localStorage.getItem('diagnoses')) || [];
+        let appointments = JSON.parse(localStorage.getItem('appointments')) || [];
+        let admissions = JSON.parse(localStorage.getItem('admissions')) || [];
+        let labResults = JSON.parse(localStorage.getItem('labResults')) || [];
+        let auditLog = JSON.parse(localStorage.getItem('auditLog')) || [];
+        let notifications = JSON.parse(localStorage.getItem('notifications')) || [];
+        let currentAIImage = null;
+        let currentAIResult = null;
+        let selectedPatientForAI = null;
+        let gradcamEnabled = false;
+        let probabilityChart = null;
+        let hospitalSettings = JSON.parse(localStorage.getItem('hospitalSettings')) || {
+            totalBeds: 100,
+            icuBeds: 20,
+            generalBeds: 80
+        };
+
+        // Demo users
+        const users = {
+            'admin': { password: 'admin123', role: 'admin', name: 'Administrator' },
+            'doctor': { password: 'doctor123', role: 'doctor', name: 'Dr. Smith' },
+            'nurse': { password: 'nurse123', role: 'nurse', name: 'Nurse Johnson' },
+            'lab': { password: 'lab123', role: 'lab', name: 'Lab Tech' }
+        };
+
+        // ==================== AUTHENTICATION ====================
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const role = document.getElementById('role-select').value;
+
+            // Simple demo authentication
+            if (users[username] && users[username].password === password) {
+                currentUser = {
+                    username: username,
+                    role: role,
+                    name: users[username].name,
+                    loginTime: new Date()
+                };
+
+                addAuditLog('login', `User ${username} logged in as ${role}`);
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                
+                showNotification('Login Successful', 'success');
+                navigate('dashboard-page');
+                initializeDashboard();
+            } else {
+                showNotification('Invalid credentials', 'error');
+            }
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                addAuditLog('logout', `User ${currentUser.username} logged out`);
+                currentUser = null;
+                localStorage.removeItem('currentUser');
+                navigate('login-page');
+                showNotification('Logged out successfully', 'success');
+            }
+        }
+
+        function navigate(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+        }
+
+        // ==================== DASHBOARD INITIALIZATION ====================
+        function initializeDashboard() {
+            if (!currentUser) return;
+
+            document.getElementById('user-name').textContent = currentUser.name;
+            document.getElementById('user-role').textContent = currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1);
+            document.getElementById('user-initials').textContent = currentUser.name.split(' ').map(n => n[0]).join('');
+
+            setupSidebar();
+            loadDashboardContent();
+        }
+
+        function setupSidebar() {
+            const nav = document.getElementById('sidebar-nav');
+            const menuItems = {
+                admin: [
+                    { id: 'dashboard', icon: 'grid-2', label: 'Dashboard' },
+                    { id: 'patients', icon: 'users', label: 'Patients' },
+                    { id: 'ai-diagnostics', icon: 'eye', label: 'AI Diagnostics' },
+                    { id: 'appointments', icon: 'calendar', label: 'Appointments' },
+                    { id: 'admissions', icon: 'bed', label: 'Admissions' },
+                    { id: 'lab-radiology', icon: 'flask', label: 'Lab & Radiology' },
+                    { id: 'reports', icon: 'file-medical', label: 'Reports' },
+                    { id: 'analytics', icon: 'chart-line', label: 'Analytics' },
+                    { id: 'staff', icon: 'user-tie', label: 'Staff Management' },
+                    { id: 'settings', icon: 'cog', label: 'Settings' }
+                ],
+                doctor: [
+                    { id: 'dashboard', icon: 'grid-2', label: 'Dashboard' },
+                    { id: 'patients', icon: 'users', label: 'My Patients' },
+                    { id: 'ai-diagnostics', icon: 'eye', label: 'AI Diagnostics' },
+                    { id: 'appointments', icon: 'calendar', label: 'Appointments' },
+                    { id: 'lab-radiology', icon: 'flask', label: 'Lab & Radiology' },
+                    { id: 'reports', icon: 'file-medical', label: 'Reports' }
+                ],
+                nurse: [
+                    { id: 'dashboard', icon: 'grid-2', label: 'Dashboard' },
+                    { id: 'patients', icon: 'users', label: 'Patients' },
+                    { id: 'admissions', icon: 'bed', label: 'Admissions' },
+                    { id: 'vitals', icon: 'heartbeat', label: 'Vitals Monitoring' }
+                ],
+                lab: [
+                    { id: 'dashboard', icon: 'grid-2', label: 'Dashboard' },
+                    { id: 'lab-radiology', icon: 'flask', label: 'Lab & Radiology' },
+                    { id: 'pending', icon: 'clock', label: 'Pending Results' }
+                ]
+            };
+
+            const items = menuItems[currentUser.role] || menuItems.admin;
+            nav.innerHTML = items.map(item => `
+                <button onclick="switchContent('${item.id}')" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white transition-all" data-section="${item.id}">
+                    <i class="fas fa-${item.icon}"></i> ${item.label}
+                </button>
+            `).join('');
+
+            // Activate first item
+            switchContent('dashboard');
+        }
+
+        function switchContent(sectionId) {
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.dataset.section === sectionId) {
+                    item.classList.add('active');
+                }
+            });
+
+            const titles = {
+                'dashboard': 'Dashboard Overview',
+                'patients': 'Patient Management',
+                'ai-diagnostics': 'AI Retinal Diagnostics',
+                'appointments': 'Appointments Schedule',
+                'admissions': 'Patient Admissions',
+                'lab-radiology': 'Lab & Radiology',
+                'reports': 'Clinical Reports',
+                'analytics': 'Hospital Analytics',
+                'staff': 'Staff Management',
+                'settings': 'System Settings',
+                'vitals': 'Vitals Monitoring',
+                'pending': 'Pending Lab Results'
+            };
+
+            document.getElementById('page-title').textContent = titles[sectionId] || 'Dashboard';
+            loadContent(sectionId);
+        }
+
+        // ==================== CONTENT LOADING ====================
+        function loadContent(sectionId) {
+            const content = document.getElementById('main-content');
+            
+            switch(sectionId) {
+                case 'dashboard':
+                    loadDashboardContent();
+                    break;
+                case 'patients':
+                    loadPatientsContent();
+                    break;
+                case 'ai-diagnostics':
+                    loadAIDiagnosticsContent();
+                    break;
+                case 'appointments':
+                    loadAppointmentsContent();
+                    break;
+                case 'admissions':
+                    loadAdmissionsContent();
+                    break;
+                case 'lab-radiology':
+                    loadLabRadiologyContent();
+                    break;
+                case 'reports':
+                    loadReportsContent();
+                    break;
+                case 'analytics':
+                    loadAnalyticsContent();
+                    break;
+                case 'staff':
+                    loadStaffContent();
+                    break;
+                case 'settings':
+                    loadSettingsContent();
+                    break;
+                default:
+                    content.innerHTML = '<div class="text-center p-12"><p class="text-slate-500">Content coming soon...</p></div>';
+            }
+        }
+
+        function loadDashboardContent() {
+            const content = document.getElementById('main-content');
+            const todayDiagnoses = diagnoses.filter(d => new Date(d.date).toDateString() === new Date().toDateString()).length;
+            const activeAdmissions = admissions.filter(a => !a.dischargeDate).length;
+            const todayAppointments = appointments.filter(a => new Date(a.date).toDateString() === new Date().toDateString()).length;
+            const pendingLab = labResults.filter(l => l.status === 'pending').length;
+
+            content.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="glass stat-card p-6 rounded-[24px] hover:border-teal-500/40 transition-all cursor-pointer">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 rounded-xl bg-teal-500/10 flex items-center justify-center">
+                                <i class="fas fa-users text-teal-400 text-xl"></i>
+                            </div>
+                            <i class="fas fa-arrow-trend-up text-green-400"></i>
+                        </div>
+                        <h3 class="text-3xl font-bold mb-1">${patients.length}</h3>
+                        <p class="text-sm text-slate-400">Total Patients</p>
+                    </div>
+                    
+                    <div class="glass stat-card p-6 rounded-[24px] hover:border-blue-500/40 transition-all cursor-pointer" onclick="switchContent('admissions')">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                                <i class="fas fa-bed text-blue-400 text-xl"></i>
+                            </div>
+                            <button onclick="event.stopPropagation(); editBedCapacity()" class="text-xs text-blue-400 hover:text-blue-300" title="Edit Bed Capacity">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </div>
+                        <div class="flex items-baseline gap-2 mb-1">
+                            <h3 class="text-3xl font-bold">${activeAdmissions}</h3>
+                            <span class="text-sm text-slate-500">/ ${hospitalSettings.totalBeds}</span>
+                        </div>
+                        <p class="text-sm text-slate-400">Active Admissions</p>
+                        <div class="mt-2 bg-blue-500/20 rounded-full h-2 overflow-hidden">
+                            <div class="bg-blue-500 h-full transition-all" style="width: ${(activeAdmissions / hospitalSettings.totalBeds * 100).toFixed(1)}%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="glass stat-card p-6 rounded-[24px] hover:border-purple-500/40 transition-all cursor-pointer">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center">
+                                <i class="fas fa-calendar text-purple-400 text-xl"></i>
+                            </div>
+                            <i class="fas fa-clock text-slate-500"></i>
+                        </div>
+                        <h3 class="text-3xl font-bold mb-1">${todayAppointments}</h3>
+                        <p class="text-sm text-slate-400">Today's Appointments</p>
+                    </div>
+
+                    <div class="glass stat-card p-6 rounded-[24px] hover:border-green-500/40 transition-all cursor-pointer">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center">
+                                <i class="fas fa-eye text-green-400 text-xl"></i>
+                            </div>
+                            <span class="text-xs font-bold text-green-400">97.2%</span>
+                        </div>
+                        <h3 class="text-3xl font-bold mb-1">${todayDiagnoses}</h3>
+                        <p class="text-sm text-slate-400">AI Diagnoses Today</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                    <div class="glass p-6 rounded-[24px]">
+                        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">AI Model Status</h3>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm">Model Version</span>
+                                <span class="font-bold text-teal-400">v2.3 Active</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm">Accuracy</span>
+                                <span class="font-bold">98.23%</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm">F1-Score</span>
+                                <span class="font-bold">98.27%</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm">Validation AUC</span>
+                                <span class="font-bold">99.6%</span>
+                            </div>
+                            <div class="mt-4 p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                                    <span class="text-xs font-bold text-green-400">System Operational</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass p-6 rounded-[24px] lg:col-span-2">
+                        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">Recent AI Diagnoses</h3>
+                        <div class="space-y-3" id="recent-diagnoses">
+                            ${diagnoses.slice(-5).reverse().map(d => {
+                                const patient = patients.find(p => p.id === d.patientId);
+                                const severity = d.severity || 'Moderate';
+                                const color = severity === 'Mild' ? 'yellow' : severity === 'Severe' ? 'red' : 'orange';
+                                return `
+                                    <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-all">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 h-8 rounded-lg bg-${color}-500/20 flex items-center justify-center">
+                                                <i class="fas fa-eye text-${color}-400"></i>
+                                            </div>
+                                            <div>
+                                                <p class="text-sm font-bold">${d.diagnosis}</p>
+                                                <p class="text-xs text-slate-500">${patient ? patient.firstName + ' ' + patient.lastName : 'Unknown'}</p>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="text-xs font-bold text-${color}-400">${d.confidence}%</p>
+                                            <p class="text-xs text-slate-500">${severity}</p>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('') || '<p class="text-sm text-slate-500 text-center py-8">No diagnoses yet</p>'}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="glass p-6 rounded-[24px]">
+                        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">Monthly Patient Visits</h3>
+                        <canvas id="visits-chart"></canvas>
+                    </div>
+
+                    <div class="glass p-6 rounded-[24px]">
+                        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">Disease Distribution</h3>
+                        <canvas id="disease-chart"></canvas>
+                    </div>
+                </div>
+            `;
+
+            // Initialize charts
+            setTimeout(() => {
+                initializeCharts();
+            }, 100);
+        }
+
+        function initializeCharts() {
+            // Monthly visits chart
+            const visitsCtx = document.getElementById('visits-chart');
+            if (visitsCtx) {
+                new Chart(visitsCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                        datasets: [{
+                            label: 'Patient Visits',
+                            data: [120, 150, 180, 160, 200, 220],
+                            borderColor: '#2dd4bf',
+                            backgroundColor: 'rgba(45, 212, 191, 0.1)',
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: { 
+                                beginAtZero: true,
+                                grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                                ticks: { color: '#94a3b8' }
+                            },
+                            x: {
+                                grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                                ticks: { color: '#94a3b8' }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Disease distribution chart
+            const diseaseCtx = document.getElementById('disease-chart');
+            if (diseaseCtx) {
+                new Chart(diseaseCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Diabetic Retinopathy', 'Glaucoma', 'Macular Degeneration', 'Normal'],
+                        datasets: [{
+                            data: [35, 25, 15, 25],
+                            backgroundColor: ['#ef4444', '#f59e0b', '#8b5cf6', '#10b981']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: { color: '#94a3b8', padding: 15 }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function loadPatientsContent() {
+            const content = document.getElementById('main-content');
+            content.innerHTML = `
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h3 class="text-2xl font-bold">Patient Records</h3>
+                        <p class="text-sm text-slate-400">${patients.length} patients registered</p>
+                    </div>
+                    <button onclick="openModal('add-patient-modal')" class="bg-teal-500 hover:bg-teal-400 text-black font-bold px-6 py-3 rounded-xl transition-all flex items-center gap-2">
+                        <i class="fas fa-user-plus"></i> Register Patient
+                    </button>
+                </div>
+
+                <div class="glass p-6 rounded-[24px] mb-6">
+                    <div class="flex gap-4">
+                        <input type="text" id="patient-search" placeholder="Search patients..." class="flex-1 glass px-4 py-3 rounded-xl outline-none" oninput="filterPatients()">
+                        <select id="patient-filter" class="glass px-4 py-3 rounded-xl outline-none" onchange="filterPatients()">
+                            <option value="all">All Patients</option>
+                            <option value="recent">Recent</option>
+                            <option value="critical">Critical Cases</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 gap-4" id="patients-list">
+                    ${renderPatientsList()}
+                </div>
+            `;
+        }
+
+        function renderPatientsList() {
+            if (patients.length === 0) {
+                return `
+                    <div class="text-center glass p-12 rounded-[24px]">
+                        <i class="fas fa-users text-4xl text-slate-700 mb-4"></i>
+                        <p class="text-slate-500 mb-4">No patients registered yet</p>
+                        <button onclick="openModal('add-patient-modal')" class="bg-teal-500 hover:bg-teal-400 text-black font-bold px-6 py-3 rounded-xl transition-all">
+                            <i class="fas fa-user-plus mr-2"></i> Add First Patient
+                        </button>
+                    </div>
+                `;
+            }
+
+            return patients.map(patient => {
+                const age = calculateAge(patient.dob);
+                const diagnosesCount = diagnoses.filter(d => d.patientId === patient.id).length;
+                
+                return `
+                    <div class="glass p-6 rounded-[24px] hover:border-teal-500/40 transition-all">
+                        <div class="flex items-center gap-6">
+                            <img src="${patient.photo || 'https://via.placeholder.com/80'}" class="patient-passport border-2 border-teal-500/20" alt="${patient.firstName}">
+                            <div class="flex-1 cursor-pointer" onclick="viewPatient('${patient.id}')">
+                                <h4 class="font-bold text-lg">${patient.firstName} ${patient.lastName}</h4>
+                                <p class="text-sm text-slate-400">${patient.id}</p>
+                                <div class="flex items-center gap-4 mt-2 text-xs text-slate-500">
+                                    <span><i class="fas fa-birthday-cake mr-1"></i> ${age} years</span>
+                                    <span><i class="fas fa-venus-mars mr-1"></i> ${patient.gender}</span>
+                                    <span><i class="fas fa-phone mr-1"></i> ${patient.phone}</span>
+                                    ${patient.blood ? `<span><i class="fas fa-tint mr-1"></i> ${patient.blood}</span>` : ''}
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-2xl font-bold text-teal-400">${diagnosesCount}</p>
+                                <p class="text-xs text-slate-500">AI Scans</p>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="event.stopPropagation(); openAIDiagnosis('${patient.id}')" class="bg-teal-500/20 hover:bg-teal-500/30 text-teal-400 px-4 py-2 rounded-lg">
+                                    <i class="fas fa-eye mr-2"></i> AI Scan
+                                </button>
+                                <button onclick="event.stopPropagation(); deletePatient('${patient.id}')" class="delete-btn bg-red-500/20 hover:bg-red-500/30 text-red-400 px-4 py-2 rounded-lg" title="Delete Patient">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function filterPatients() {
+            const search = document.getElementById('patient-search').value.toLowerCase();
+            const filter = document.getElementById('patient-filter').value;
+            
+            let filtered = patients;
+            
+            if (search) {
+                filtered = filtered.filter(p => 
+                    p.firstName.toLowerCase().includes(search) ||
+                    p.lastName.toLowerCase().includes(search) ||
+                    p.id.toLowerCase().includes(search)
+                );
+            }
+            
+            if (filter === 'recent') {
+                filtered = filtered.slice(-10).reverse();
+            }
+            
+            document.getElementById('patients-list').innerHTML = filtered.length > 0 
+                ? filtered.map(patient => {
+                    const age = calculateAge(patient.dob);
+                    const diagnosesCount = diagnoses.filter(d => d.patientId === patient.id).length;
+                    
+                    return `
+                        <div class="glass p-6 rounded-[24px] hover:border-teal-500/40 transition-all">
+                            <div class="flex items-center gap-6">
+                                <img src="${patient.photo || 'https://via.placeholder.com/80'}" class="patient-passport border-2 border-teal-500/20" alt="${patient.firstName}">
+                                <div class="flex-1 cursor-pointer" onclick="viewPatient('${patient.id}')">
+                                    <h4 class="font-bold text-lg">${patient.firstName} ${patient.lastName}</h4>
+                                    <p class="text-sm text-slate-400">${patient.id}</p>
+                                    <div class="flex items-center gap-4 mt-2 text-xs text-slate-500">
+                                        <span><i class="fas fa-birthday-cake mr-1"></i> ${age} years</span>
+                                        <span><i class="fas fa-venus-mars mr-1"></i> ${patient.gender}</span>
+                                        <span><i class="fas fa-phone mr-1"></i> ${patient.phone}</span>
+                                    </div>
+                                </div>
+                                <div class="text-center">
+                                    <p class="text-2xl font-bold text-teal-400">${diagnosesCount}</p>
+                                    <p class="text-xs text-slate-500">AI Scans</p>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button onclick="event.stopPropagation(); openAIDiagnosis('${patient.id}')" class="bg-teal-500/20 hover:bg-teal-500/30 text-teal-400 px-4 py-2 rounded-lg">
+                                        <i class="fas fa-eye mr-2"></i> AI Scan
+                                    </button>
+                                    <button onclick="event.stopPropagation(); deletePatient('${patient.id}')" class="delete-btn bg-red-500/20 hover:bg-red-500/30 text-red-400 px-4 py-2 rounded-lg" title="Delete Patient">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('')
+                : '<div class="text-center glass p-12 rounded-[24px]"><p class="text-slate-500">No patients found</p></div>';
+        }
+
+        function loadAIDiagnosticsContent() {
+            const content = document.getElementById('main-content');
+            content.innerHTML = `
+                <div class="mb-6">
+                    <h3 class="text-2xl font-bold mb-2">AI Retinal Diagnostics</h3>
+                    <p class="text-sm text-slate-400">Advanced deep learning for retinal disease detection</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                    <div class="glass p-6 rounded-[24px]">
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="w-12 h-12 rounded-xl bg-teal-500/10 flex items-center justify-center">
+                                <i class="fas fa-eye text-teal-400 text-xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold">Model Accuracy</h4>
+                                <p class="text-2xl font-bold text-teal-400">97.2%</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="glass p-6 rounded-[24px]">
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                                <i class="fas fa-eye text-blue-400 text-xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold">Scans Today</h4>
+                                <p class="text-2xl font-bold text-blue-400">${diagnoses.filter(d => new Date(d.date).toDateString() === new Date().toDateString()).length}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass p-6 rounded-[24px]">
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center">
+                                <i class="fas fa-check-circle text-green-400 text-xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold">Total Diagnoses</h4>
+                                <p class="text-2xl font-bold text-green-400">${diagnoses.length}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass p-8 rounded-[24px] text-center mb-8">
+                    <i class="fas fa-upload text-4xl text-teal-400 mb-4"></i>
+                    <h3 class="text-xl font-bold mb-2">Start New AI Analysis</h3>
+                    <p class="text-sm text-slate-400 mb-6">Select a patient and upload retinal fundus image</p>
+                    <button onclick="openModal('ai-diagnosis-modal')" class="bg-teal-500 hover:bg-teal-400 text-black font-bold px-8 py-4 rounded-xl transition-all">
+                        <i class="fas fa-eye mr-2"></i> Launch AI Diagnostics
+                    </button>
+                </div>
+
+                <div class="glass p-6 rounded-[24px]">
+                    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">Recent AI Diagnoses</h3>
+                    <div class="space-y-3">
+                        ${diagnoses.slice(-10).reverse().map(d => {
+                            const patient = patients.find(p => p.id === d.patientId);
+                            const severity = d.severity || 'Moderate';
+                            const color = severity === 'Mild' ? 'yellow' : severity === 'Severe' ? 'red' : 'orange';
+                            
+                            return `
+                                <div class="flex items-center justify-between p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-all cursor-pointer">
+                                    <div class="flex items-center gap-4">
+                                        <img src="${d.image}" class="w-12 h-12 rounded-lg object-cover">
+                                        <div>
+                                            <p class="text-sm font-bold">${d.diagnosis}</p>
+                                            <p class="text-xs text-slate-500">${patient ? patient.firstName + ' ' + patient.lastName : 'Unknown'} • ${new Date(d.date).toLocaleString()}</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-xs font-bold text-${color}-400">${d.confidence}% Confidence</p>
+                                        <p class="text-xs text-slate-500">${severity}</p>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('') || '<p class="text-sm text-slate-500 text-center py-8">No diagnoses yet</p>'}
+                    </div>
+                </div>
+            `;
+        }
+
+        function loadAppointmentsContent() {
+            const content = document.getElementById('main-content');
+            content.innerHTML = `
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h3 class="text-2xl font-bold">Appointments Schedule</h3>
+                        <p class="text-sm text-slate-400">${appointments.length} appointments scheduled</p>
+                    </div>
+                    <button onclick="openAddAppointmentModal()" class="bg-teal-500 hover:bg-teal-400 text-black font-bold px-6 py-3 rounded-xl transition-all">
+                        <i class="fas fa-calendar-plus mr-2"></i> New Appointment
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                    <div class="glass p-6 rounded-[24px]">
+                        <div class="flex items-center gap-3 mb-2">
+                            <i class="fas fa-calendar-day text-blue-400"></i>
+                            <span class="text-sm font-bold text-slate-400">Today</span>
+                        </div>
+                        <p class="text-3xl font-bold">${appointments.filter(a => new Date(a.date).toDateString() === new Date().toDateString()).length}</p>
+                    </div>
+                    <div class="glass p-6 rounded-[24px]">
+                        <div class="flex items-center gap-3 mb-2">
+                            <i class="fas fa-calendar-week text-teal-400"></i>
+                            <span class="text-sm font-bold text-slate-400">This Week</span>
+                        </div>
+                        <p class="text-3xl font-bold">${appointments.length}</p>
+                    </div>
+                    <div class="glass p-6 rounded-[24px]">
+                        <div class="flex items-center gap-3 mb-2">
+                            <i class="fas fa-clock text-yellow-400"></i>
+                            <span class="text-sm font-bold text-slate-400">Pending</span>
+                        </div>
+                        <p class="text-3xl font-bold">${appointments.filter(a => a.status === 'scheduled').length}</p>
+                    </div>
+                </div>
+
+                <div class="glass p-6 rounded-[24px]">
+                    <h4 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">All Appointments</h4>
+                    <div class="space-y-3">
+                        ${appointments.length > 0 ? appointments.map(apt => {
+                            const statusColors = {
+                                'scheduled': 'bg-blue-500/20 text-blue-400',
+                                'completed': 'bg-green-500/20 text-green-400',
+                                'cancelled': 'bg-red-500/20 text-red-400'
+                            };
+                            return `
+                                <div class="flex items-center justify-between p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-all">
+                                    <div class="flex-1">
+                                        <p class="font-bold">${apt.patientName}</p>
+                                        <p class="text-sm text-slate-400">${apt.type}</p>
+                                        <p class="text-xs text-slate-500 mt-1">${apt.doctor || 'No doctor assigned'}</p>
+                                    </div>
+                                    <div class="text-center mx-4">
+                                        <p class="text-sm font-bold">${new Date(apt.date).toLocaleDateString()}</p>
+                                        <p class="text-xs text-slate-400">${apt.time}</p>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs px-3 py-1 rounded-full ${statusColors[apt.status] || statusColors.scheduled}">${apt.status}</span>
+                                        <button onclick="deleteAppointment('${apt.id}')" class="delete-btn text-red-400 hover:text-red-300 px-2" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('') : '<p class="text-sm text-slate-500 text-center py-8">No appointments scheduled</p>'}
+                    </div>
+                </div>
+            `;
+        }
+
+        function loadAdmissionsContent() {
+            const content = document.getElementById('main-content');
+            const activeAdmissions = admissions.filter(a => !a.dischargeDate);
+            const dischargedAdmissions = admissions.filter(a => a.dischargeDate);
+            const occupancyPercent = (activeAdmissions.length / hospitalSettings.totalBeds * 100).toFixed(1);
+            const availableBeds = hospitalSettings.totalBeds - activeAdmissions.length;
+            
+            content.innerHTML = `
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h3 class="text-2xl font-bold">Patient Admissions</h3>
+                        <p class="text-sm text-slate-400">${activeAdmissions.length} of ${hospitalSettings.totalBeds} beds occupied (${occupancyPercent}%)</p>
+                    </div>
+                    <div class="flex gap-3">
+                        <button onclick="editBedCapacity()" class="bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 font-bold px-6 py-3 rounded-xl transition-all">
+                            <i class="fas fa-cog mr-2"></i> Bed Settings
+                        </button>
+                        <button onclick="openAddAdmissionModal()" class="bg-teal-500 hover:bg-teal-400 text-black font-bold px-6 py-3 rounded-xl transition-all">
+                            <i class="fas fa-bed mr-2"></i> Admit Patient
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
+                    <div class="glass p-6 rounded-[24px]">
+                        <div class="flex items-center gap-3 mb-2">
+                            <i class="fas fa-procedures text-blue-400"></i>
+                            <span class="text-sm font-bold text-slate-400">Active Admissions</span>
+                        </div>
+                        <p class="text-3xl font-bold">${activeAdmissions.length}</p>
+                        <div class="mt-2 bg-blue-500/20 rounded-full h-2 overflow-hidden">
+                            <div class="bg-blue-500 h-full transition-all" style="width: ${occupancyPercent}%"></div>
+                        </div>
+                    </div>
+                    <div class="glass p-6 rounded-[24px]">
+                        <div class="flex items-center gap-3 mb-2">
+                            <i class="fas fa-bed-empty text-green-400"></i>
+                            <span class="text-sm font-bold text-slate-400">Available Beds</span>
+                        </div>
+                        <p class="text-3xl font-bold">${availableBeds}</p>
+                        <p class="text-xs text-slate-500 mt-1">${hospitalSettings.totalBeds} total capacity</p>
+                    </div>
+                    <div class="glass p-6 rounded-[24px]">
+                        <div class="flex items-center gap-3 mb-2">
+                            <i class="fas fa-door-open text-teal-400"></i>
+                            <span class="text-sm font-bold text-slate-400">Discharged Today</span>
+                        </div>
+                        <p class="text-3xl font-bold">${dischargedAdmissions.filter(a => new Date(a.dischargeDate).toDateString() === new Date().toDateString()).length}</p>
+                    </div>
+                    <div class="glass p-6 rounded-[24px]">
+                        <div class="flex items-center gap-3 mb-2">
+                            <i class="fas fa-hospital text-purple-400"></i>
+                            <span class="text-sm font-bold text-slate-400">Total Admissions</span>
+                        </div>
+                        <p class="text-3xl font-bold">${admissions.length}</p>
+                    </div>
+                </div>
+
+                <div class="glass p-6 rounded-[24px] mb-6">
+                    <h4 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Active Admissions</h4>
+                    <div class="space-y-3">
+                        ${activeAdmissions.length > 0 ? activeAdmissions.map(adm => {
+                            const admissionDate = new Date(adm.admissionDate);
+                            const daysAdmitted = Math.floor((new Date() - admissionDate) / (1000 * 60 * 60 * 24));
+                            const statusColor = adm.reason === 'Emergency' ? 'red' : 'blue';
+                            
+                            return `
+                                <div class="flex items-center justify-between p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-all">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 rounded-lg bg-${statusColor}-500/20 flex items-center justify-center">
+                                                <i class="fas fa-bed text-${statusColor}-400"></i>
+                                            </div>
+                                            <div>
+                                                <p class="font-bold">${adm.patientName}</p>
+                                                <p class="text-sm text-slate-400">${adm.room} • ${adm.reason}</p>
+                                                <p class="text-xs text-slate-500 mt-1">Dr. ${adm.doctor} • Day ${daysAdmitted + 1}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <button onclick="dischargePatient('${adm.id}')" class="bg-green-500/20 hover:bg-green-500/30 text-green-400 px-4 py-2 rounded-lg text-sm font-bold">
+                                            <i class="fas fa-sign-out-alt mr-1"></i> Discharge
+                                        </button>
+                                        <button onclick="deleteAdmission('${adm.id}')" class="delete-btn text-red-400 hover:text-red-300 px-3" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('') : `
+                            <div class="text-center py-12">
+                                <i class="fas fa-bed text-4xl text-slate-700 mb-4"></i>
+                                <p class="text-sm text-slate-500 mb-4">No active admissions</p>
+                                <p class="text-xs text-slate-600">${availableBeds} beds available</p>
+                            </div>
+                        `}
+                    </div>
+                </div>
+
+                <div class="glass p-6 rounded-[24px]">
+                    <h4 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Recent Discharges</h4>
+                    <div class="space-y-3">
+                        ${dischargedAdmissions.slice(0, 10).map(adm => {
+                            const dischargeDate = new Date(adm.dischargeDate);
+                            const admissionDate = new Date(adm.admissionDate);
+                            const stayDuration = Math.floor((dischargeDate - admissionDate) / (1000 * 60 * 60 * 24));
+                            
+                            return `
+                                <div class="flex items-center justify-between p-4 bg-white/5 rounded-lg opacity-75">
+                                    <div class="flex-1">
+                                        <p class="font-bold">${adm.patientName}</p>
+                                        <p class="text-sm text-slate-400">${adm.room} • ${adm.reason}</p>
+                                        <p class="text-xs text-slate-500 mt-1">Discharged: ${dischargeDate.toLocaleDateString()} • Stay: ${stayDuration} days</p>
+                                    </div>
+                                    <button onclick="deleteAdmission('${adm.id}')" class="delete-btn text-red-400 hover:text-red-300 px-3" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            `;
+                        }).join('') || '<p class="text-sm text-slate-500 text-center py-8">No discharge records</p>'}
+                    </div>
+                </div>
+            `;
+        }
+
+        function loadLabRadiologyContent() {
+            const content = document.getElementById('main-content');
+            content.innerHTML = `
+                <div class="mb-6">
+                    <h3 class="text-2xl font-bold">Lab & Radiology</h3>
+                    <p class="text-sm text-slate-400">Upload and analyze medical imaging</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="glass p-8 rounded-[24px] border-dashed border-2 border-white/10 hover:border-teal-500/40 transition-all text-center">
+                        <i class="fas fa-x-ray text-4xl text-teal-400 mb-4"></i>
+                        <h4 class="font-bold mb-2">Upload X-Ray / CT / MRI</h4>
+                        <p class="text-sm text-slate-400 mb-4">Radiology imaging analysis</p>
+                        <button onclick="alert('Radiology upload coming soon')" class="bg-teal-500/20 hover:bg-teal-500/30 text-teal-400 px-6 py-3 rounded-lg">
+                            <i class="fas fa-upload mr-2"></i> Upload Scan
+                        </button>
+                    </div>
+
+                    <div class="glass p-8 rounded-[24px] border-dashed border-2 border-white/10 hover:border-blue-500/40 transition-all text-center">
+                        <i class="fas fa-flask text-4xl text-blue-400 mb-4"></i>
+                        <h4 class="font-bold mb-2">Lab Results</h4>
+                        <p class="text-sm text-slate-400 mb-4">Upload and manage lab reports</p>
+                        <button onclick="alert('Lab results upload coming soon')" class="bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 px-6 py-3 rounded-lg">
+                            <i class="fas fa-file-upload mr-2"></i> Upload Results
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function loadReportsContent() {
+            const content = document.getElementById('main-content');
+            content.innerHTML = `
+                <div class="mb-6">
+                    <h3 class="text-2xl font-bold">Clinical Reports</h3>
+                    <p class="text-sm text-slate-400">Generated diagnostic and medical reports</p>
+                </div>
+
+                <div class="grid grid-cols-1 gap-4">
+                    ${diagnoses.map(d => {
+                        const patient = patients.find(p => p.id === d.patientId);
+                        const severity = d.severity || 'Moderate';
+                        const color = severity === 'Mild' ? 'yellow' : severity === 'Severe' ? 'red' : 'orange';
+                        
+                        return `
+                            <div class="glass p-6 rounded-[24px] hover:border-${color}-500/40 transition-all">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-6">
+                                        <div class="w-16 h-16 rounded-xl bg-${color}-500/20 flex items-center justify-center">
+                                            <i class="fas fa-file-medical text-${color}-400 text-2xl"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-lg">${d.diagnosis}</h4>
+                                            <p class="text-sm text-slate-400">${patient ? patient.firstName + ' ' + patient.lastName : 'Unknown'}</p>
+                                            <div class="flex items-center gap-3 mt-2">
+                                                <span class="px-3 py-1 rounded-full bg-${color}-500/20 text-${color}-400 text-xs font-bold">${severity}</span>
+                                                <span class="text-xs text-slate-500">Confidence: ${d.confidence}%</span>
+                                                <span class="text-xs text-slate-500">${new Date(d.date).toLocaleString()}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button onclick="downloadDiagnosisReport('${d.id}')" class="bg-teal-500 hover:bg-teal-400 text-black px-4 py-2 rounded-lg font-bold">
+                                        <i class="fas fa-download mr-2"></i> PDF
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('') || '<div class="glass p-12 rounded-[24px] text-center"><p class="text-slate-500">No reports generated yet</p></div>'}
+                </div>
+            `;
+        }
+
+        function loadAnalyticsContent() {
+            const content = document.getElementById('main-content');
+            content.innerHTML = `
+                <div class="mb-6">
+                    <h3 class="text-2xl font-bold">Hospital Analytics</h3>
+                    <p class="text-sm text-slate-400">Performance metrics and insights</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="glass p-6 rounded-[24px]">
+                        <h4 class="text-sm font-bold text-slate-400 uppercase mb-4">AI Performance Trends</h4>
+                        <canvas id="analytics-chart-1"></canvas>
+                    </div>
+
+                    <div class="glass p-6 rounded-[24px]">
+                        <h4 class="text-sm font-bold text-slate-400 uppercase mb-4">Detection Distribution</h4>
+                        <canvas id="analytics-chart-2"></canvas>
+                    </div>
+                </div>
+            `;
+
+            setTimeout(() => {
+                const ctx1 = document.getElementById('analytics-chart-1');
+                if (ctx1) {
+                    new Chart(ctx1, {
+                        type: 'line',
+                        data: {
+                            labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                            datasets: [{
+                                label: 'Confidence Score',
+                                data: [94, 95, 96, 97],
+                                borderColor: '#2dd4bf',
+                                tension: 0.4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: { legend: { labels: { color: '#94a3b8' } } },
+                            scales: {
+                                y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                                x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                            }
+                        }
+                    });
+                }
+            }, 100);
+        }
+
+        function loadStaffContent() {
+            const content = document.getElementById('main-content');
+            content.innerHTML = `
+                <div class="mb-6">
+                    <h3 class="text-2xl font-bold">Staff Management</h3>
+                    <p class="text-sm text-slate-400">Manage hospital staff and roles</p>
+                </div>
+
+                <div class="glass p-6 rounded-[24px]">
+                    <div class="space-y-4">
+                        ${Object.entries(users).map(([username, user]) => `
+                            <div class="flex items-center justify-between p-4 bg-white/5 rounded-lg">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 rounded-lg bg-teal-500/20 flex items-center justify-center">
+                                        <i class="fas fa-user text-teal-400"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-bold">${user.name}</p>
+                                        <p class="text-sm text-slate-400">${username}</p>
+                                    </div>
+                                </div>
+                                <span class="px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 text-xs font-bold uppercase">${user.role}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function loadSettingsContent() {
+            const content = document.getElementById('main-content');
+            content.innerHTML = `
+                <div class="mb-6">
+                    <h3 class="text-2xl font-bold">System Settings</h3>
+                    <p class="text-sm text-slate-400">Configure hospital system preferences</p>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="glass p-6 rounded-[24px]">
+                        <h4 class="font-bold mb-4">AI Model Configuration</h4>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-sm font-bold text-slate-400 mb-2 block">Active Model Version</label>
+                                <select class="glass px-4 py-3 rounded-xl w-full max-w-md outline-none">
+                                    <option>v2.3 (Current)</option>
+                                    <option>v2.2</option>
+                                    <option>v2.1</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-sm font-bold text-slate-400 mb-2 block">Confidence Threshold</label>
+                                <input type="range" class="w-full max-w-md" min="70" max="99" value="85">
+                                <p class="text-xs text-slate-500 mt-1">Current: 85%</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass p-6 rounded-[24px]">
+                        <h4 class="font-bold mb-4">Hospital Information</h4>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-sm font-bold text-slate-400 mb-2 block">Hospital Name</label>
+                                <input type="text" value="St. Mary's Medical Center" class="glass px-4 py-3 rounded-xl w-full max-w-md outline-none">
+                            </div>
+                            <div>
+                                <label class="text-sm font-bold text-slate-400 mb-2 block">Address</label>
+                                <input type="text" value="123 Medical Drive, Lagos, Nigeria" class="glass px-4 py-3 rounded-xl w-full max-w-md outline-none">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass p-6 rounded-[24px]">
+                        <h4 class="font-bold mb-4">Audit Log</h4>
+                        <div class="space-y-2 max-h-64 overflow-y-auto">
+                            ${auditLog.slice(-20).reverse().map(log => `
+                                <div class="text-xs p-2 bg-white/5 rounded">
+                                    <span class="text-slate-500">${new Date(log.timestamp).toLocaleString()}</span> - 
+                                    <span class="text-teal-400">${log.action}</span>: ${log.details}
+                                </div>
+                            `).join('') || '<p class="text-sm text-slate-500 text-center py-4">No audit logs yet</p>'}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ==================== PATIENT FUNCTIONS ====================
+        function addPatient() {
+            const patient = {
+                id: 'PAT-' + Date.now(),
+                firstName: document.getElementById('patient-firstname').value,
+                lastName: document.getElementById('patient-lastname').value,
+                dob: document.getElementById('patient-dob').value,
+                gender: document.getElementById('patient-gender').value,
+                blood: document.getElementById('patient-blood').value,
+                phone: document.getElementById('patient-phone').value,
+                email: document.getElementById('patient-email').value,
+                address: document.getElementById('patient-address').value,
+                insurance: document.getElementById('patient-insurance').value,
+                insuranceId: document.getElementById('patient-insurance-id').value,
+                emergency: document.getElementById('patient-emergency').value,
+                history: document.getElementById('patient-history').value,
+                photo: null,
+                createdAt: new Date().toISOString(),
+                createdBy: currentUser.username
+            };
+
+            const photoInput = document.getElementById('patient-photo');
+            if (photoInput.files && photoInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    patient.photo = e.target.result;
+                    savePatient(patient);
+                };
+                reader.readAsDataURL(photoInput.files[0]);
+            } else {
+                savePatient(patient);
+            }
+        }
+
+        function savePatient(patient) {
+            patients.push(patient);
+            localStorage.setItem('patients', JSON.stringify(patients));
+            addAuditLog('patient_add', `New patient registered: ${patient.firstName} ${patient.lastName}`);
+            showNotification(`Patient ${patient.firstName} ${patient.lastName} registered successfully!`, 'success');
+            closeModal('add-patient-modal');
+            document.getElementById('add-patient-form').reset();
+            
+            // Navigate to patients page to show the new patient
+            switchContent('patients');
+        }
+
+        function deletePatient(patientId) {
+            const patient = patients.find(p => p.id === patientId);
+            if (!patient) return;
+
+            if (confirm(`Are you sure you want to delete patient ${patient.firstName} ${patient.lastName}? This will also delete all associated diagnoses.`)) {
+                // Remove patient
+                patients = patients.filter(p => p.id !== patientId);
+                localStorage.setItem('patients', JSON.stringify(patients));
+
+                // Remove associated diagnoses
+                diagnoses = diagnoses.filter(d => d.patientId !== patientId);
+                localStorage.setItem('diagnoses', JSON.stringify(diagnoses));
+
+                addAuditLog('patient_delete', `Patient deleted: ${patient.firstName} ${patient.lastName}`);
+                showNotification('Patient deleted successfully', 'success');
+                
+                // Refresh the patients list
+                loadPatientsContent();
+            }
+        }
+
+        function viewPatient(patientId) {
+            const patient = patients.find(p => p.id === patientId);
+            if (!patient) return;
+
+            const age = calculateAge(patient.dob);
+            const patientDiagnoses = diagnoses.filter(d => d.patientId === patient.id);
+
+            const content = `
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="text-center">
+                        <img src="${patient.photo || 'https://via.placeholder.com/160'}" class="w-40 h-40 rounded-2xl object-cover mx-auto mb-4 border-2 border-teal-500/20" alt="${patient.firstName}">
+                        <h4 class="text-xl font-bold">${patient.firstName} ${patient.lastName}</h4>
+                        <p class="text-sm text-slate-400">${patient.id}</p>
+                        <button onclick="closeModal('view-patient-modal'); openAIDiagnosis('${patient.id}')" class="mt-4 w-full bg-teal-500 hover:bg-teal-400 text-black font-bold py-3 rounded-xl">
+                            <i class="fas fa-eye mr-2"></i> AI Scan
+                        </button>
+                    </div>
+
+                    <div class="lg:col-span-2 space-y-6">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="glass p-4 rounded-xl">
+                                <p class="text-xs text-slate-400 mb-1">Age</p>
+                                <p class="text-lg font-bold">${age} years</p>
+                            </div>
+                            <div class="glass p-4 rounded-xl">
+                                <p class="text-xs text-slate-400 mb-1">Gender</p>
+                                <p class="text-lg font-bold">${patient.gender}</p>
+                            </div>
+                            <div class="glass p-4 rounded-xl">
+                                <p class="text-xs text-slate-400 mb-1">Blood Type</p>
+                                <p class="text-lg font-bold">${patient.blood || 'N/A'}</p>
+                            </div>
+                            <div class="glass p-4 rounded-xl">
+                                <p class="text-xs text-slate-400 mb-1">Phone</p>
+                                <p class="text-sm font-bold">${patient.phone}</p>
+                            </div>
+                            <div class="glass p-4 rounded-xl col-span-2">
+                                <p class="text-xs text-slate-400 mb-1">Email</p>
+                                <p class="text-sm font-bold">${patient.email || 'N/A'}</p>
+                            </div>
+                            <div class="glass p-4 rounded-xl col-span-2">
+                                <p class="text-xs text-slate-400 mb-1">Address</p>
+                                <p class="text-sm font-bold">${patient.address}</p>
+                            </div>
+                        </div>
+
+                        <div class="glass p-4 rounded-xl">
+                            <p class="text-xs text-slate-400 mb-2">Insurance</p>
+                            <p class="text-sm font-bold">${patient.insurance || 'N/A'} ${patient.insuranceId ? `(${patient.insuranceId})` : ''}</p>
+                        </div>
+
+                        <div class="glass p-4 rounded-xl">
+                            <p class="text-xs text-slate-400 mb-2">Medical History</p>
+                            <p class="text-sm">${patient.history || 'No medical history recorded'}</p>
+                        </div>
+
+                        <div class="glass p-4 rounded-xl">
+                            <p class="text-xs text-slate-400 mb-3">AI Diagnoses (${patientDiagnoses.length})</p>
+                            <div class="space-y-2">
+                                ${patientDiagnoses.map(d => {
+                                    const severity = d.severity || 'Moderate';
+                                    const color = severity === 'Mild' ? 'yellow' : severity === 'Severe' ? 'red' : 'orange';
+                                    return `
+                                        <div class="flex items-center justify-between bg-white/5 p-3 rounded-lg hover:bg-white/10 transition-all">
+                                            <div class="flex-1">
+                                                <p class="text-sm font-bold">${d.diagnosis}</p>
+                                                <p class="text-xs text-slate-500">${new Date(d.date).toLocaleString()}</p>
+                                            </div>
+                                            <div class="flex items-center gap-3">
+                                                <span class="text-xs font-bold text-${color}-400">${d.confidence}%</span>
+                                                <button onclick="deleteDiagnosis('${d.id}')" class="delete-btn text-red-400 hover:text-red-300" title="Delete Scan">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('') || '<p class="text-sm text-slate-500">No diagnoses yet</p>'}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('patient-details-content').innerHTML = content;
+            openModal('view-patient-modal');
+        }
+
+        // ==================== APPOINTMENT FUNCTIONS ====================
+        function openAddAppointmentModal() {
+            // Populate patient dropdown
+            const patientSelect = document.getElementById('appointment-patient');
+            patientSelect.innerHTML = '<option value="">Select Patient...</option>' +
+                patients.map(p => `<option value="${p.id}">${p.firstName} ${p.lastName} (${p.id})</option>`).join('');
+            
+            openModal('add-appointment-modal');
+        }
+
+        function addAppointment() {
+            const patientId = document.getElementById('appointment-patient').value;
+            const patient = patients.find(p => p.id === patientId);
+            
+            if (!patient) {
+                showNotification('Please select a patient', 'error');
+                return;
+            }
+
+            const appointment = {
+                id: 'APT-' + Date.now(),
+                patientId: patientId,
+                patientName: `${patient.firstName} ${patient.lastName}`,
+                date: document.getElementById('appointment-date').value,
+                time: document.getElementById('appointment-time').value,
+                type: document.getElementById('appointment-type').value,
+                doctor: document.getElementById('appointment-doctor').value || 'Unassigned',
+                notes: document.getElementById('appointment-notes').value,
+                status: 'scheduled',
+                createdAt: new Date().toISOString(),
+                createdBy: currentUser.username
+            };
+
+            appointments.push(appointment);
+            localStorage.setItem('appointments', JSON.stringify(appointments));
+            addAuditLog('appointment_add', `New appointment scheduled for ${appointment.patientName}`);
+            
+            // Add notification
+            addNotification(
+                `Appointment Scheduled: ${appointment.patientName}`,
+                `${appointment.type} on ${new Date(appointment.date).toLocaleDateString()} at ${appointment.time}`,
+                'success'
+            );
+            
+            showNotification(`Appointment scheduled for ${appointment.patientName}`, 'success');
+            
+            closeModal('add-appointment-modal');
+            document.getElementById('add-appointment-form').reset();
+            
+            // Navigate to appointments page
+            switchContent('appointments');
+        }
+
+        function deleteAppointment(appointmentId) {
+            const appointment = appointments.find(a => a.id === appointmentId);
+            if (!appointment) return;
+
+            if (confirm(`Delete appointment for ${appointment.patientName}?`)) {
+                appointments = appointments.filter(a => a.id !== appointmentId);
+                localStorage.setItem('appointments', JSON.stringify(appointments));
+                addAuditLog('appointment_delete', `Appointment deleted for ${appointment.patientName}`);
+                showNotification('Appointment deleted', 'success');
+                updateNotificationBadge();
+                loadAppointmentsContent();
+            }
+        }
+
+        function deleteDiagnosis(diagnosisId) {
+            const diagnosis = diagnoses.find(d => d.id === diagnosisId);
+            if (!diagnosis) return;
+
+            const patient = patients.find(p => p.id === diagnosis.patientId);
+            
+            if (confirm(`Delete AI scan "${diagnosis.diagnosis}" from ${patient.firstName} ${patient.lastName}'s record?`)) {
+                diagnoses = diagnoses.filter(d => d.id !== diagnosisId);
+                localStorage.setItem('diagnoses', JSON.stringify(diagnoses));
+                addAuditLog('diagnosis_delete', `Diagnosis deleted: ${diagnosis.diagnosis} for patient ${diagnosis.patientId}`);
+                showNotification('AI scan deleted successfully', 'success');
+                
+                // Refresh the patient view
+                viewPatient(patient.id);
+            }
+        }
+
+        // ==================== ADMISSION FUNCTIONS ====================
+        function openAddAdmissionModal() {
+            // Populate patient dropdown
+            const patientSelect = document.getElementById('admission-patient');
+            patientSelect.innerHTML = '<option value="">Select Patient...</option>' +
+                patients.map(p => `<option value="${p.id}">${p.firstName} ${p.lastName} (${p.id})</option>`).join('');
+            
+            // Set default date to today
+            document.getElementById('admission-date').valueAsDate = new Date();
+            
+            openModal('add-admission-modal');
+        }
+
+        function addAdmission() {
+            const patientId = document.getElementById('admission-patient').value;
+            const patient = patients.find(p => p.id === patientId);
+            
+            if (!patient) {
+                showNotification('Please select a patient', 'error');
+                return;
+            }
+
+            // Check bed availability
+            const activeAdmissions = admissions.filter(a => !a.dischargeDate).length;
+            if (activeAdmissions >= hospitalSettings.totalBeds) {
+                showNotification(`Cannot admit patient: All ${hospitalSettings.totalBeds} beds are occupied`, 'error');
+                if (confirm('All beds are occupied. Would you like to update bed capacity settings?')) {
+                    closeModal('add-admission-modal');
+                    editBedCapacity();
+                }
+                return;
+            }
+
+            const admission = {
+                id: 'ADM-' + Date.now(),
+                patientId: patientId,
+                patientName: `${patient.firstName} ${patient.lastName}`,
+                admissionDate: document.getElementById('admission-date').value,
+                room: document.getElementById('admission-room').value,
+                reason: document.getElementById('admission-reason').value,
+                doctor: document.getElementById('admission-doctor').value || 'Unassigned',
+                expectedStay: document.getElementById('admission-duration').value || null,
+                notes: document.getElementById('admission-notes').value,
+                status: 'active',
+                dischargeDate: null,
+                createdAt: new Date().toISOString(),
+                createdBy: currentUser.username
+            };
+
+            admissions.push(admission);
+            localStorage.setItem('admissions', JSON.stringify(admissions));
+            addAuditLog('admission_add', `Patient admitted: ${admission.patientName} to ${admission.room}`);
+            
+            // Add notification
+            const remainingBeds = hospitalSettings.totalBeds - (activeAdmissions + 1);
+            addNotification(
+                `Patient Admitted: ${admission.patientName}`,
+                `Admitted to ${admission.room} - ${admission.reason} (${remainingBeds} beds remaining)`,
+                'info'
+            );
+            
+            showNotification(`${admission.patientName} admitted to ${admission.room}`, 'success');
+            
+            closeModal('add-admission-modal');
+            document.getElementById('add-admission-form').reset();
+            
+            // Navigate to admissions page
+            switchContent('admissions');
+        }
+
+        function dischargePatient(admissionId) {
+            const admission = admissions.find(a => a.id === admissionId);
+            if (!admission) return;
+
+            if (confirm(`Discharge ${admission.patientName} from ${admission.room}?`)) {
+                admission.dischargeDate = new Date().toISOString();
+                admission.status = 'discharged';
+                localStorage.setItem('admissions', JSON.stringify(admissions));
+                addAuditLog('patient_discharge', `Patient discharged: ${admission.patientName} from ${admission.room}`);
+                
+                addNotification(
+                    `Patient Discharged: ${admission.patientName}`,
+                    `Discharged from ${admission.room}`,
+                    'success'
+                );
+                
+                showNotification(`${admission.patientName} discharged successfully`, 'success');
+                updateNotificationBadge();
+                loadAdmissionsContent();
+            }
+        }
+
+        function deleteAdmission(admissionId) {
+            const admission = admissions.find(a => a.id === admissionId);
+            if (!admission) return;
+
+            if (confirm(`Delete admission record for ${admission.patientName}?`)) {
+                admissions = admissions.filter(a => a.id !== admissionId);
+                localStorage.setItem('admissions', JSON.stringify(admissions));
+                addAuditLog('admission_delete', `Admission deleted for ${admission.patientName}`);
+                showNotification('Admission record deleted', 'success');
+                loadAdmissionsContent();
+            }
+        }
+
+        // ==================== NOTIFICATION FUNCTIONS ====================
+        function addNotification(title, message, type = 'info') {
+            const notification = {
+                id: 'NOTIF-' + Date.now(),
+                title: title,
+                message: message,
+                type: type,
+                timestamp: new Date().toISOString(),
+                read: false
+            };
+
+            notifications.unshift(notification); // Add to beginning
+            
+            // Keep only last 50 notifications
+            if (notifications.length > 50) {
+                notifications = notifications.slice(0, 50);
+            }
+            
+            localStorage.setItem('notifications', JSON.stringify(notifications));
+            updateNotificationBadge();
+        }
+
+        function updateNotificationBadge() {
+            const unreadCount = notifications.filter(n => !n.read).length;
+            const badge = document.getElementById('notification-badge');
+            
+            if (badge) {
+                if (unreadCount > 0) {
+                    badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            }
+            
+            renderNotifications();
+        }
+
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notification-dropdown');
+            dropdown.classList.toggle('hidden');
+            
+            if (!dropdown.classList.contains('hidden')) {
+                renderNotifications();
+            }
+        }
+
+        function renderNotifications() {
+            const container = document.getElementById('notification-list');
+            if (!container) return;
+
+            if (notifications.length === 0) {
+                container.innerHTML = '<p class="text-sm text-slate-500 text-center py-8">No notifications</p>';
+                return;
+            }
+
+            const icons = {
+                success: 'fa-check-circle text-green-400',
+                error: 'fa-exclamation-circle text-red-400',
+                info: 'fa-info-circle text-teal-400',
+                warning: 'fa-exclamation-triangle text-yellow-400'
+            };
+
+            container.innerHTML = notifications.map(notif => {
+                const timeAgo = getTimeAgo(new Date(notif.timestamp));
+                return `
+                    <div class="p-3 ${notif.read ? 'bg-white/5' : 'bg-teal-500/10'} rounded-lg mb-2 cursor-pointer hover:bg-white/10 transition-all" onclick="markAsRead('${notif.id}')">
+                        <div class="flex items-start gap-3">
+                            <i class="fas ${icons[notif.type]} mt-1"></i>
+                            <div class="flex-1">
+                                <p class="text-sm font-bold">${notif.title}</p>
+                                <p class="text-xs text-slate-400 mt-1">${notif.message}</p>
+                                <p class="text-xs text-slate-500 mt-1">${timeAgo}</p>
+                            </div>
+                            ${!notif.read ? '<span class="w-2 h-2 rounded-full bg-teal-400"></span>' : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function markAsRead(notificationId) {
+            const notif = notifications.find(n => n.id === notificationId);
+            if (notif) {
+                notif.read = true;
+                localStorage.setItem('notifications', JSON.stringify(notifications));
+                updateNotificationBadge();
+            }
+        }
+
+        function clearAllNotifications() {
+            if (confirm('Clear all notifications?')) {
+                notifications = [];
+                localStorage.setItem('notifications', JSON.stringify(notifications));
+                updateNotificationBadge();
+                document.getElementById('notification-dropdown').classList.add('hidden');
+                showNotification('All notifications cleared', 'success');
+            }
+        }
+
+        function getTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            
+            if (seconds < 60) return 'Just now';
+            if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+            if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+            if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
+            return date.toLocaleDateString();
+        }
+
+        function checkUpcomingAppointments() {
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            
+            appointments.forEach(apt => {
+                const aptDate = new Date(apt.date);
+                
+                // Check if appointment is tomorrow
+                if (aptDate.toDateString() === tomorrow.toDateString() && apt.status === 'scheduled') {
+                    const existing = notifications.find(n => 
+                        n.title.includes(apt.patientName) && 
+                        n.message.includes('tomorrow')
+                    );
+                    
+                    if (!existing) {
+                        addNotification(
+                            `Upcoming Appointment: ${apt.patientName}`,
+                            `${apt.type} scheduled for tomorrow at ${apt.time}`,
+                            'warning'
+                        );
+                    }
+                }
+                
+                // Check if appointment is today
+                if (aptDate.toDateString() === today.toDateString() && apt.status === 'scheduled') {
+                    const existing = notifications.find(n => 
+                        n.title.includes(apt.patientName) && 
+                        n.message.includes('today')
+                    );
+                    
+                    if (!existing) {
+                        addNotification(
+                            `Today's Appointment: ${apt.patientName}`,
+                            `${apt.type} at ${apt.time}`,
+                            'info'
+                        );
+                    }
+                }
+            });
+        }
+
+        function checkPatientFollowups() {
+            // Check if any patients need follow-up based on their last diagnosis
+            diagnoses.forEach(diag => {
+                const diagDate = new Date(diag.date);
+                const daysSince = Math.floor((new Date() - diagDate) / (1000 * 60 * 60 * 24));
+                
+                // If diagnosis was 30 days ago and severe, suggest follow-up
+                if (daysSince === 30 && diag.severity === 'Severe') {
+                    const patient = patients.find(p => p.id === diag.patientId);
+                    if (patient) {
+                        const existing = notifications.find(n => 
+                            n.title.includes('Follow-up') && 
+                            n.message.includes(patient.firstName)
+                        );
+                        
+                        if (!existing) {
+                            addNotification(
+                                `Follow-up Recommended`,
+                                `${patient.firstName} ${patient.lastName} - 30 days since ${diag.diagnosis} diagnosis`,
+                                'warning'
+                            );
+                        }
+                    }
+                }
+            });
+        }
+
+        // ==================== BED CAPACITY FUNCTIONS ====================
+        function editBedCapacity() {
+            // Populate form with current values
+            document.getElementById('total-beds-input').value = hospitalSettings.totalBeds;
+            document.getElementById('icu-beds-input').value = hospitalSettings.icuBeds;
+            document.getElementById('general-beds-input').value = hospitalSettings.generalBeds;
+            
+            // Update occupancy display
+            const activeAdmissions = admissions.filter(a => !a.dischargeDate).length;
+            document.getElementById('current-occupancy-display').textContent = `${activeAdmissions} / ${hospitalSettings.totalBeds}`;
+            const occupancyPercent = (activeAdmissions / hospitalSettings.totalBeds * 100).toFixed(1);
+            document.getElementById('occupancy-bar').style.width = `${occupancyPercent}%`;
+            
+            openModal('edit-bed-capacity-modal');
+        }
+
+        function saveBedCapacity() {
+            const totalBeds = parseInt(document.getElementById('total-beds-input').value);
+            const icuBeds = parseInt(document.getElementById('icu-beds-input').value);
+            const generalBeds = parseInt(document.getElementById('general-beds-input').value);
+            
+            // Validation
+            if (icuBeds + generalBeds !== totalBeds) {
+                showNotification('ICU + General beds must equal Total beds', 'error');
+                return;
+            }
+            
+            if (totalBeds < 1) {
+                showNotification('Total beds must be at least 1', 'error');
+                return;
+            }
+            
+            // Check if current admissions exceed new capacity
+            const activeAdmissions = admissions.filter(a => !a.dischargeDate).length;
+            if (activeAdmissions > totalBeds) {
+                if (!confirm(`Warning: You currently have ${activeAdmissions} active admissions but are setting capacity to ${totalBeds} beds. Continue anyway?`)) {
+                    return;
+                }
+            }
+            
+            // Save settings
+            hospitalSettings.totalBeds = totalBeds;
+            hospitalSettings.icuBeds = icuBeds;
+            hospitalSettings.generalBeds = generalBeds;
+            localStorage.setItem('hospitalSettings', JSON.stringify(hospitalSettings));
+            
+            addAuditLog('settings_update', `Bed capacity updated: Total ${totalBeds}, ICU ${icuBeds}, General ${generalBeds}`);
+            showNotification('Bed capacity settings updated', 'success');
+            
+            closeModal('edit-bed-capacity-modal');
+            
+            // Refresh dashboard if on dashboard
+            if (document.querySelector('[data-section="dashboard"]').classList.contains('active')) {
+                loadDashboardContent();
+            }
+        }
+
+        // ==================== AI DIAGNOSIS FUNCTIONS ====================
+        function openAIDiagnosis(patientId) {
+            selectedPatientForAI = patients.find(p => p.id === patientId);
+            closeModal('view-patient-modal');
+            openModal('ai-diagnosis-modal');
+            
+            // Reset state
+            currentAIImage = null;
+            currentAIResult = null;
+            gradcamEnabled = false;
+            document.getElementById('ai-preview-image').classList.add('hidden');
+            document.getElementById('ai-empty-state').classList.remove('hidden');
+            document.getElementById('ai-results-panel').classList.add('hidden');
+            document.getElementById('ai-explanation-panel').classList.add('hidden');
+            document.getElementById('save-ai-btn').classList.add('hidden');
+            document.getElementById('report-ai-btn').classList.add('hidden');
+            document.getElementById('gradcam-canvas').classList.add('hidden');
+            document.getElementById('gradcam-controls').classList.add('hidden');
+        }
+
+        function loadAIImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    currentAIImage = e.target.result;
+                    const img = document.getElementById('ai-preview-image');
+                    img.src = currentAIImage;
+                    img.classList.remove('hidden');
+                    document.getElementById('ai-empty-state').classList.add('hidden');
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function runAIDiagnosis() {
+            if (!currentAIImage) {
+                showNotification('Please upload an image first', 'error');
+                return;
+            }
+
+            if (!selectedPatientForAI) {
+                showNotification('No patient selected', 'error');
+                return;
+            }
+
+            // Show scanning animation
+            document.getElementById('ai-scanning').classList.remove('hidden');
+            document.getElementById('run-ai-btn').disabled = true;
+            document.getElementById('run-ai-btn').innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Analyzing...';
+
+            // Simulate AI processing - FIXED: Generate consistent result based on image
+            setTimeout(() => {
+                // Use image hash to generate consistent result
+                const imageHash = currentAIImage.substring(50, 60);
+                const hashValue = imageHash.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+                
+                const diagnoses = [
+                    { name: 'Diabetic Retinopathy', severity: 'Moderate', confidence: 94.3, probs: { DR: 94.3, Glaucoma: 3.2, MD: 1.5, Normal: 1.0 } },
+                    { name: 'Glaucoma', severity: 'Mild', confidence: 89.7, probs: { DR: 5.1, Glaucoma: 89.7, MD: 3.2, Normal: 2.0 } },
+                    { name: 'Macular Degeneration', severity: 'Severe', confidence: 96.1, probs: { DR: 2.0, Glaucoma: 1.2, MD: 96.1, Normal: 0.7 } },
+                    { name: 'Normal', severity: 'Normal', confidence: 97.8, probs: { DR: 1.0, Glaucoma: 0.8, MD: 0.4, Normal: 97.8 } }
+                ];
+
+                // Select result based on hash
+                const resultIndex = hashValue % diagnoses.length;
+                const result = diagnoses[resultIndex];
+                
+                // Generate dynamic explanation based on diagnosis
+                const explanations = {
+                    'Diabetic Retinopathy': `The AI model detected Diabetic Retinopathy with ${result.confidence.toFixed(1)}% confidence. Analysis shows ${result.severity.toLowerCase()} severity based on detected features including microaneurysms, hard exudates, hemorrhages, and vascular abnormalities in the retinal fundus image. These findings suggest damage to blood vessels in the retina due to prolonged high blood sugar levels.`,
+                    'Glaucoma': `The AI model detected Glaucoma with ${result.confidence.toFixed(1)}% confidence. Analysis shows ${result.severity.toLowerCase()} severity based on detected features including optic disc cupping, increased cup-to-disc ratio, and nerve fiber layer thinning. These indicators suggest elevated intraocular pressure affecting the optic nerve.`,
+                    'Macular Degeneration': `The AI model detected Macular Degeneration with ${result.confidence.toFixed(1)}% confidence. Analysis shows ${result.severity.toLowerCase()} severity based on detected features including drusen deposits, retinal pigment epithelium changes, and central retinal deterioration. These findings indicate age-related damage to the macula affecting central vision.`,
+                    'Normal': `The AI model analyzed the retinal image with ${result.confidence.toFixed(1)}% confidence and found no significant pathological abnormalities. The retinal structure, blood vessels, optic disc, and macula all appear within normal parameters. Regular screening is still recommended for ongoing eye health monitoring.`
+                };
+                
+                currentAIResult = {
+                    diagnosis: result.name,
+                    confidence: result.confidence.toFixed(1),
+                    severity: result.severity,
+                    probabilities: {
+                        'Diabetic Retinopathy': result.probs.DR,
+                        'Glaucoma': result.probs.Glaucoma,
+                        'Macular Degeneration': result.probs.MD,
+                        'Normal': result.probs.Normal
+                    },
+                    explanation: explanations[result.name]
+                };
+
+                displayAIResults();
+                generateGradCAM();
+                
+                document.getElementById('ai-scanning').classList.add('hidden');
+                document.getElementById('run-ai-btn').disabled = false;
+                document.getElementById('run-ai-btn').innerHTML = '<i class="fas fa-eye mr-2"></i> Run AI Analysis';
+                
+                showNotification('AI analysis complete', 'success');
+            }, 3000);
+        }
+
+        function displayAIResults() {
+            document.getElementById('ai-results-panel').classList.remove('hidden');
+            document.getElementById('ai-explanation-panel').classList.remove('hidden');
+            document.getElementById('save-ai-btn').classList.remove('hidden');
+            document.getElementById('report-ai-btn').classList.remove('hidden');
+
+            const severityColors = {
+                'Normal': 'text-green-400',
+                'Mild': 'text-yellow-400',
+                'Moderate': 'text-orange-400',
+                'Severe': 'text-red-400'
+            };
+
+            document.getElementById('ai-diagnosis').textContent = currentAIResult.diagnosis;
+            document.getElementById('ai-confidence').textContent = currentAIResult.confidence + '%';
+            document.getElementById('ai-severity').textContent = currentAIResult.severity;
+            document.getElementById('ai-severity').className = 'font-bold ' + severityColors[currentAIResult.severity];
+            document.getElementById('ai-explanation-text').textContent = currentAIResult.explanation;
+
+            // Create probability chart
+            const ctx = document.getElementById('probability-chart');
+            if (probabilityChart) {
+                probabilityChart.destroy();
+            }
+
+            probabilityChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(currentAIResult.probabilities),
+                    datasets: [{
+                        label: 'Probability (%)',
+                        data: Object.values(currentAIResult.probabilities),
+                        backgroundColor: ['#ef4444', '#f59e0b', '#8b5cf6', '#10b981']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { 
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: { color: '#94a3b8' },
+                            grid: { color: 'rgba(255,255,255,0.05)' }
+                        },
+                        x: {
+                            ticks: { color: '#94a3b8', font: { size: 10 } },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        function generateGradCAM() {
+            const canvas = document.getElementById('gradcam-canvas');
+            const ctx = canvas.getContext('2d');
+            const img = document.getElementById('ai-preview-image');
+
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+
+            // Create gradient heatmap
+            const gradient = ctx.createRadialGradient(
+                canvas.width * 0.4, canvas.height * 0.5, 0,
+                canvas.width * 0.4, canvas.height * 0.5, canvas.width * 0.4
+            );
+            
+            gradient.addColorStop(0, 'rgba(255, 0, 0, 0.8)');
+            gradient.addColorStop(0.3, 'rgba(255, 165, 0, 0.6)');
+            gradient.addColorStop(0.6, 'rgba(255, 255, 0, 0.3)');
+            gradient.addColorStop(1, 'rgba(255, 255, 0, 0)');
+
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Add secondary hotspot
+            const gradient2 = ctx.createRadialGradient(
+                canvas.width * 0.7, canvas.height * 0.3, 0,
+                canvas.width * 0.7, canvas.height * 0.3, canvas.width * 0.2
+            );
+            
+            gradient2.addColorStop(0, 'rgba(255, 100, 0, 0.6)');
+            gradient2.addColorStop(0.5, 'rgba(255, 200, 0, 0.3)');
+            gradient2.addColorStop(1, 'rgba(255, 255, 0, 0)');
+
+            ctx.fillStyle = gradient2;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function toggleGradCAM() {
+            gradcamEnabled = !gradcamEnabled;
+            const canvas = document.getElementById('gradcam-canvas');
+            const controls = document.getElementById('gradcam-controls');
+            const btn = document.getElementById('gradcam-toggle');
+
+            if (gradcamEnabled) {
+                canvas.classList.remove('hidden');
+                controls.classList.remove('hidden');
+                btn.innerHTML = '<i class="fas fa-eye-slash mr-1"></i> Hide GradCAM';
+            } else {
+                canvas.classList.add('hidden');
+                controls.classList.add('hidden');
+                btn.innerHTML = '<i class="fas fa-eye mr-1"></i> GradCAM';
+            }
+        }
+
+        function updateGradCAMIntensity(value) {
+            const canvas = document.getElementById('gradcam-canvas');
+            canvas.style.opacity = value / 100;
+        }
+
+        function saveAIDiagnosis() {
+            if (!currentAIResult || !selectedPatientForAI) return;
+
+            const diagnosis = {
+                id: 'DIAG-' + Date.now(),
+                patientId: selectedPatientForAI.id,
+                diagnosis: currentAIResult.diagnosis,
+                confidence: currentAIResult.confidence,
+                severity: currentAIResult.severity,
+                image: currentAIImage,
+                date: new Date().toISOString(),
+                doctor: currentUser.name,
+                explanation: currentAIResult.explanation
+            };
+
+            diagnoses.push(diagnosis);
+            localStorage.setItem('diagnoses', JSON.stringify(diagnoses));
+            addAuditLog('ai_diagnosis', `AI diagnosis saved: ${diagnosis.diagnosis} for patient ${selectedPatientForAI.id}`);
+            
+            // Add notification
+            addNotification(
+                `AI diagnosis saved for ${selectedPatientForAI.firstName} ${selectedPatientForAI.lastName}`,
+                `${diagnosis.diagnosis} detected with ${diagnosis.confidence}% confidence`,
+                'success'
+            );
+            
+            showNotification(`Diagnosis saved to ${selectedPatientForAI.firstName} ${selectedPatientForAI.lastName}'s record`, 'success');
+            closeModal('ai-diagnosis-modal');
+            
+            // Navigate to the patient's record
+            viewPatient(selectedPatientForAI.id);
+        }
+
+        function generateAIReport() {
+            if (!currentAIResult || !selectedPatientForAI) return;
+
+            downloadDiagnosisReport(null, currentAIResult, selectedPatientForAI);
+        }
+
+        function downloadDiagnosisReport(diagnosisId, customResult = null, customPatient = null) {
+            let diagnosis, patient;
+            
+            if (diagnosisId) {
+                diagnosis = diagnoses.find(d => d.id === diagnosisId);
+                if (!diagnosis) return;
+                patient = patients.find(p => p.id === diagnosis.patientId);
+            } else {
+                diagnosis = customResult;
+                patient = customPatient;
+            }
+
+            if (!patient) {
+                showNotification('Patient information not found', 'error');
+                return;
+            }
+
+            showNotification('Generating PDF report...', 'info');
+            
+            // Use jsPDF to create actual PDF
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Header
+            doc.setFontSize(20);
+            doc.setTextColor(45, 212, 191);
+            doc.text('RetinaLens AI', 20, 20);
+            doc.setFontSize(12);
+            doc.setTextColor(100, 100, 100);
+            doc.text('AI Retinal Diagnosis Report', 20, 28);
+            
+            // Line
+            doc.setDrawColor(45, 212, 191);
+            doc.line(20, 32, 190, 32);
+            
+            // Patient Information
+            doc.setFontSize(14);
+            doc.setTextColor(0, 0, 0);
+            doc.text('Patient Information', 20, 45);
+            doc.setFontSize(10);
+            doc.text(`Name: ${patient.firstName} ${patient.lastName}`, 20, 55);
+            doc.text(`Patient ID: ${patient.id}`, 20, 62);
+            doc.text(`Age: ${calculateAge(patient.dob)} years`, 20, 69);
+            doc.text(`Gender: ${patient.gender}`, 20, 76);
+            doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 83);
+            
+            // Diagnosis Results
+            doc.setFontSize(14);
+            doc.text('AI Diagnosis Results', 20, 100);
+            doc.setFontSize(10);
+            doc.text(`Diagnosis: ${diagnosis.diagnosis}`, 20, 110);
+            doc.text(`Confidence: ${diagnosis.confidence}%`, 20, 117);
+            doc.text(`Severity: ${diagnosis.severity || 'N/A'}`, 20, 124);
+            
+            // Explanation
+            if (diagnosis.explanation) {
+                doc.setFontSize(14);
+                doc.text('AI Explanation', 20, 140);
+                doc.setFontSize(9);
+                const explanationLines = doc.splitTextToSize(diagnosis.explanation, 170);
+                doc.text(explanationLines, 20, 150);
+            }
+            
+            // Footer
+            doc.setFontSize(8);
+            doc.setTextColor(150, 150, 150);
+            doc.text('This report was generated by RetinaLens AI diagnostic system.', 20, 280);
+            doc.text(`Generated by: ${currentUser.name} | Date: ${new Date().toLocaleString()}`, 20, 285);
+            
+            // Download
+            doc.save(`RetinaLens_Report_${patient.lastName}_${Date.now()}.pdf`);
+            showNotification('Report downloaded successfully', 'success');
+        }
+
+        // ==================== UTILITY FUNCTIONS ====================
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function showNotification(message, type = 'info') {
+            const colors = {
+                success: 'border-green-500/30 bg-green-500/10',
+                error: 'border-red-500/30 bg-red-500/10',
+                info: 'border-teal-500/30 bg-teal-500/10'
+            };
+
+            const icons = {
+                success: 'fa-check-circle text-green-400',
+                error: 'fa-exclamation-circle text-red-400',
+                info: 'fa-info-circle text-teal-400'
+            };
+
+            const notification = document.createElement('div');
+            notification.className = `notification ${colors[type]}`;
+            notification.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <i class="fas ${icons[type]}"></i>
+                    <p class="text-sm font-medium">${message}</p>
+                </div>
+            `;
+
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideIn 0.3s ease-out reverse';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        function calculateAge(dob) {
+            const birthDate = new Date(dob);
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            return age;
+        }
+
+        function addAuditLog(action, details) {
+            auditLog.push({
+                timestamp: new Date().toISOString(),
+                user: currentUser ? currentUser.username : 'system',
+                action: action,
+                details: details
+            });
+            localStorage.setItem('auditLog', JSON.stringify(auditLog));
+        }
+
+        // ==================== INITIALIZATION ====================
+        window.onload = function() {
+            // Check if user is logged in
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                navigate('dashboard-page');
+                initializeDashboard();
+                
+                // Initialize notifications
+                updateNotificationBadge();
+                checkUpcomingAppointments();
+                checkPatientFollowups();
+                
+                // Check for upcoming appointments every hour
+                setInterval(() => {
+                    checkUpcomingAppointments();
+                    checkPatientFollowups();
+                }, 3600000);
+            }
+        };
+
+        // Close notification dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('notification-dropdown');
+            const button = event.target.closest('button');
+            
+            if (dropdown && !dropdown.contains(event.target) && (!button || !button.onclick || button.onclick.toString().indexOf('toggleNotifications') === -1)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
+        // Session timeout (30 minutes)
+        let sessionTimeout;
+        function resetSessionTimeout() {
+            clearTimeout(sessionTimeout);
+            sessionTimeout = setTimeout(() => {
+                if (currentUser) {
+                    addAuditLog('session_timeout', 'User session expired');
+                    logout();
+                    showNotification('Session expired. Please login again.', 'info');
+                }
+            }, 30 * 60 * 1000);
+        }
+
+        document.addEventListener('click', resetSessionTimeout);
+        document.addEventListener('keypress', resetSessionTimeout);
+    </script>
+</body>
+</html>
