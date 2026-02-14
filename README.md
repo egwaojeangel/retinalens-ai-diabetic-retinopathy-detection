@@ -188,7 +188,7 @@ A lightweight **Flask**-based web application enables:
 This simulates a simplified AI-assisted screening workflow.
 
 Run locally with:  
-`python app.py` (or `flask run` – see instructions in the `app/` folder)
+`python webapp.py` (or `flask run`)
 
 ---
 ## Model Checkpointing & Reproducibility
