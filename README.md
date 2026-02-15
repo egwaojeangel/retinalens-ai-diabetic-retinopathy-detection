@@ -235,7 +235,7 @@ It is **not approved** for clinical diagnosis.
 
 ### Demo Video
 
-[![Demo Video](screenshots/upload_fundus_example.png)](https://drive.google.com/file/d/YOUR_VIDEO_ID/view?usp=sharing)  
+[![Demo Video](images/login_page.png)](https://drive.google.com/file/d/YOUR_VIDEO_ID/view?usp=sharing)  
 *(replace link and thumbnail path)*
 
 ---
