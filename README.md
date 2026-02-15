@@ -235,8 +235,8 @@ It is **not approved** for clinical diagnosis.
 
 ### Demo Video
 
-[![Demo Video](images/login_page.png)](https://drive.google.com/file/d/YOUR_VIDEO_ID/view?usp=sharing)  
-*(replace link and thumbnail path)*
+[![Demo Video](images/login_page.png)](https://drive.google.com/file/d/1juVdxAc2fzMCkKu3p3wP4xwWGuSdK_11/view?usp=sharing)  
+
 
 ---
 **Author**  
