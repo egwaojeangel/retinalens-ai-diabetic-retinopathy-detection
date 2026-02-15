@@ -129,7 +129,7 @@ Strong validation performance:
 These results indicate strong discriminative performance across DR severity levels.  
 **Note:** Metrics reflect internal validation performance only.
 
-![Validation Results](![Validation Results](images/diabetic_retinopathy_results.png)  
+[Validation Results](images/diabetic_retinopathy_results.png)  
 
 
 ---
