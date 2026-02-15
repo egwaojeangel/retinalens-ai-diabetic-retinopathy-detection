@@ -2,7 +2,7 @@
 
 **Core Stack:** Python (PyTorch) · Deep Learning · Medical Image Classification · Fundus Photography  
 **Model:** EfficientNet-B0  
-**Dataset:** APTOS 2019 Blindness Detection  
+**Dataset:** APTOS 2019 Blindness Detection
 ---
 ## Overview
 
