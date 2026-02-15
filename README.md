@@ -129,7 +129,7 @@ Strong validation performance:
 These results indicate strong discriminative performance across DR severity levels.  
 **Note:** Metrics reflect internal validation performance only.
 
-![Validation Results](screenshots/dr_classification_results.png)  
+![Validation Results]("C:\Users\egwao\TumorSeg\Diabetic_retinopathy_screenshots\Diabetic Retinopath results.png")  
 *(replace with your actual screenshot path)*
 
 ---
