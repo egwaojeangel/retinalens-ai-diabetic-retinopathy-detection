@@ -129,8 +129,8 @@ Strong validation performance:
 These results indicate strong discriminative performance across DR severity levels.  
 **Note:** Metrics reflect internal validation performance only.
 
-![Validation Results](https://github.com/egwaojeangel/retinalens-ai-diabetic-retinopathy-detection/commit/d25953db04fee3a98ec8a8fa56808b133783367f#diff-d46e1106161f5f5da84ac0064d0981daea7ea508cd36181ea3220ca23e24b23f)  
-*(replace with your actual screenshot path)*
+![Validation Results](![Validation Results](images/diabetic_retinopathy_results.png)  
+
 
 ---
 ## Evaluation Metrics
