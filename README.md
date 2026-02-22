@@ -1,244 +1,303 @@
 # 👁️ Diabetic Retinopathy Detection Using EfficientNet on Fundus Images
 
-**Core Stack:** Python (PyTorch) · Deep Learning · Medical Image Classification · Fundus Photography  
-**Model:** EfficientNet-B0  
-**Dataset:** APTOS 2019 Blindness Detection
----
-## Overview
+![Python](https://img.shields.io/badge/Python-3.10+-blue?style=flat-square&logo=python)
+![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-ee4c2c?style=flat-square&logo=pytorch)
+![Flask](https://img.shields.io/badge/Flask-3.x-black?style=flat-square&logo=flask)
+![AUC](https://img.shields.io/badge/Validation%20AUC-99.60%25-brightgreen?style=flat-square)
+![Accuracy](https://img.shields.io/badge/Accuracy-98.23%25-brightgreen?style=flat-square)
+![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)
 
-This project presents a deep learning–based automated **diabetic retinopathy (DR)** severity grading system using color fundus images and the **EfficientNet-B0** architecture.
+**Core Stack:** Python (PyTorch, Flask) · EfficientNet-B0 · Transfer Learning · Grad-CAM · Medical Imaging
 
-The model performs **multi-class classification** across five clinically defined severity stages:
-
-- 0 — No DR  
-- 1 — Mild  
-- 2 — Moderate  
-- 3 — Severe  
-- 4 — Proliferative DR  
-
-Diabetic retinopathy is one of the leading causes of preventable blindness worldwide. Early automated detection enables scalable screening programs, particularly in underserved regions with limited access to ophthalmologists.
-
-This work delivers:
-
-- A reproducible deep learning pipeline  
-- Strong validation performance using AUC as the primary metric  
-- Structured checkpointing for training stability  
-- A deployable **web application** for real-time inference  
-- Integrated **Grad-CAM** explainability for visual interpretation  
+An automated deep learning system for **diabetic retinopathy severity grading** from fundus images, achieving **99.60% AUC** and **98.23% accuracy** across five clinical severity stages. Deployed as a Flask web application with integrated **Grad-CAM explainability** for transparent, interpretable predictions.
 
 ---
-## Clinical Context
 
-DR grading involves identifying pathological retinal features such as:
-
-- Microaneurysms  
-- Hemorrhages  
-- Hard exudates  
-- Cotton wool spots  
-- Neovascularization  
-
-Manual grading is time-intensive and requires trained specialists. AI-assisted systems can support:
-
-- Large-scale screening  
-- Early detection  
-- Clinical decision support  
-- Triage prioritization  
-
-This project demonstrates the feasibility of high-performance DR classification using a computationally efficient CNN.
+## 📋 Table of Contents
+- [Results](#results)
+- [How to Run](#how-to-run)
+- [Overview](#overview)
+- [Dataset](#dataset)
+- [Methodology](#methodology)
+- [Model Architecture](#model-architecture)
+- [Training Details](#training-details)
+- [Grad-CAM Explainability](#explainability-with-grad-cam)
+- [Web Application](#web-application)
+- [Limitations](#limitations)
+- [Future Work](#future-work)
+- [Disclaimer](#disclaimer)
 
 ---
-## Dataset
 
-**APTOS 2019 Blindness Detection** (Kaggle)  
-
-The dataset contains labeled fundus images graded on a 0–4 DR severity scale.
-
-> ⚠️ **Note:** Dataset not included in this repository.  
-> Download from: [Kaggle – APTOS 2019 Blindness Detection](https://www.kaggle.com/c/aptos2019-blindness-detection/data)
-
----
-## Data Preparation & Split
-
-The dataset was split as follows:
-
-- **Training Set:** 2,929 images  
-- **Validation Set:** 723 images  
-- No separate held-out test evaluation performed  
-
-Stratified splitting was used to preserve class distribution across subsets.
-
----
-## Methodology
-
-### Image Preprocessing
-
-- Resize to **224 × 224**  
-- 3-channel RGB input  
-- ImageNet normalization  
-- Tensor conversion via PyTorch transforms  
-
-### Data Augmentation
-
-Applied during training to improve generalization:
-
-- Random horizontal flipping  
-- Random rotation  
-- Brightness and contrast adjustments  
-
-### Model Architecture
-
-**EfficientNet-B0**  
-
-EfficientNet applies compound scaling across:
-
-- Network depth  
-- Network width  
-- Input resolution  
-
-Key properties:
-
-- Pretrained on ImageNet  
-- Lightweight and computationally efficient  
-- Strong performance-to-parameter ratio  
-
-The final classification layer was modified to output 5 DR severity classes.
-
----
-## Training Details
-
-- **Framework:** PyTorch + timm  
-- **Loss Function:** Cross-Entropy Loss  
-- **Optimizer:** Adam  
-- **Learning Rate:** 1e-3  
-- **Epochs:** 10  
-- **Device:** CPU  
-- **Checkpointing:** Best model saved based on validation AUC  
-
-**Best model achieved at:**  
-Epoch 8 — Validation AUC: 0.9960
-
----
 ## Results
 
-Strong validation performance:
+Strong validation performance across all five DR severity classes:
 
-- **Validation AUC:** 99.60%  
-- **Validation Accuracy:** 98.23%  
-- **Validation F1 Score:** 98.27%  
+| Metric | Score |
+|---|---|
+| Validation AUC | **99.60%** |
+| Validation Accuracy | **98.23%** |
+| Validation F1 Score | **98.27%** |
+| Best Epoch | Epoch 8 |
 
-These results indicate strong discriminative performance across DR severity levels.  
-**Note:** Metrics reflect internal validation performance only.
+![Validation Results](images/diabetic_retinopathy_results.png)
 
-![Validation Results](images/diabetic_retinopathy_results.png)  
-
-
----
-## Evaluation Metrics
-
-- **AUC** (Area Under ROC Curve) — Primary metric  
-- **Accuracy**  
-- **F1 Score**  
-
-AUC was selected due to:
-
-- Sensitivity to class imbalance  
-- Clinical relevance  
-- Robust discrimination assessment  
+AUC was selected as the primary metric due to its robustness against class imbalance and its clinical relevance in screening tasks.
 
 ---
-## Explainability with Grad-CAM
 
-### Why Explainability Matters
+## How to Run
 
-In medical AI, predictive accuracy alone is insufficient. Clinical systems must provide transparency and interpretability.
+### Prerequisites
+- Python 3.10 or higher
+- Git
 
-### What is Grad-CAM?
+### 1. Clone the repository
 
-Gradient-weighted Class Activation Mapping highlights image regions most influential in the model’s prediction.
+```bash
+git clone https://github.com/egwaojeangel/diabetic_retinopathy_detection_using_efficientnet.git
+cd diabetic_retinopathy_detection_using_efficientnet
+```
 
-Implementation:
+### 2. Create a virtual environment
 
-- Gradients extracted from the final convolutional block  
-- Class-specific importance weights computed  
-- Heatmap generated and resized  
-- Overlay applied using OpenCV  
-- Output displayed in the web interface  
+```bash
+python -m venv venv
 
-### Clinical Relevance
+# Windows
+venv\Scripts\activate
 
-Grad-CAM allows verification that the model focuses on:
+# Mac/Linux
+source venv/bin/activate
+```
 
-- Retinal lesion regions  
-- Pathologically relevant features  
-- Clinically meaningful patterns  
+### 3. Install dependencies
 
-This enhances interpretability and trust in the AI system.
+```bash
+pip install -r requirements.txt
+```
 
----
-## Web Application
+### 4. Download the dataset
 
-A lightweight **Flask**-based web application enables:
+Download the APTOS 2019 dataset from Kaggle:
+👉 [APTOS 2019 Blindness Detection](https://www.kaggle.com/c/aptos2019-blindness-detection/data)
 
-- Uploading a fundus image  
-- Real-time DR severity prediction  
-- Display of predicted class  
-- Confidence score output  
-- **Grad-CAM** heatmap visualization  
+Place it in the root of the repository:
 
-This simulates a simplified AI-assisted screening workflow.
+```
+diabetic_retinopathy_detection/
+├── dataset/
+│   ├── train_images/
+│   └── train.csv
+├── images/
+├── webapp.py
+├── train.py
+└── ...
+```
 
-Run locally with:  
-`python webapp.py` (or `flask run`)
+### 5. Train the model
 
----
-## Model Checkpointing & Reproducibility
+```bash
+python train.py
+```
 
-- `best_model.pth` saved at highest validation AUC  
-- Modular training pipeline  
-- Deterministic structure for reproducibility  
+### 6. Run the web application
 
----
-## Limitations
+```bash
+python webapp.py
+```
 
-- No external test set evaluation  
-- No cross-dataset generalization study  
-- CPU-based training (limited epochs)  
-- Limited augmentation strategies  
-- No real-world clinical validation  
-
----
-## Future Work
-
-- External dataset validation  
-- Class-weighted loss for imbalance handling  
-- Larger EfficientNet variants (B3/B4)  
-- Cloud deployment (Hugging Face / Render / AWS)  
-- Structured clinical report generation  
-- Integration into a broader hospital AI system  
-
----
-## Ethical Considerations
-
-- For research and educational purposes only  
-- Not validated for clinical diagnosis  
-- Should not replace professional ophthalmologic assessment  
-- Requires regulatory approval for real-world deployment  
-
----
-## Disclaimer
-
-This system is intended **strictly for research and educational use**.  
-It is **not approved** for clinical diagnosis.
-
----
-## Demo
+Then open your browser at: **http://127.0.0.1:5000**
 
 ### Demo Video
 
-[![Demo Video](images/login_page.png)](https://drive.google.com/file/d/1juVdxAc2fzMCkKu3p3wP4xwWGuSdK_11/view?usp=sharing)  
+[![Demo Video](images/login_page.png)](https://drive.google.com/file/d/1juVdxAc2fzMCkKu3p3wP4xwWGuSdK_11/view?usp=sharing)
 
+Click the thumbnail above to watch the full system demo.
 
 ---
-**Author**  
-Angel Egwaoje  
-Medical AI Research & Development
+
+## Overview
+
+Diabetic retinopathy is one of the leading causes of preventable blindness worldwide. Manual grading of fundus images is time-intensive and requires trained ophthalmologists — a resource not always available in underserved regions.
+
+This project demonstrates how deep learning can automate DR severity grading across five clinical stages, enabling large-scale screening programs and supporting clinical decision-making. The system goes beyond prediction accuracy by integrating Grad-CAM visualisations, making the model's decisions transparent and clinically interpretable.
+
+### DR Severity Classes
+
+| Grade | Stage |
+|---|---|
+| 0 | No DR |
+| 1 | Mild |
+| 2 | Moderate |
+| 3 | Severe |
+| 4 | Proliferative DR |
+
+---
+
+## Dataset
+
+**APTOS 2019 Blindness Detection** (Kaggle)
+
+Color fundus images graded on a 0–4 DR severity scale by clinical experts.
+
+| Split | Images |
+|---|---|
+| Training | 2,929 |
+| Validation | 723 |
+| **Total** | **3,652** |
+
+Stratified splitting was applied to preserve class distribution across subsets.
+
+> ⚠️ Dataset not included in this repository due to size and licensing.
+> Download from: [Kaggle – APTOS 2019](https://www.kaggle.com/c/aptos2019-blindness-detection/data)
+
+---
+
+## Methodology
+
+### Image Preprocessing
+- Resized to **224 × 224 pixels** (EfficientNet-B0 input requirement)
+- Converted to 3-channel RGB format
+- ImageNet normalisation applied
+- Tensor conversion via PyTorch transforms
+
+### Data Augmentation (Training Only)
+- Random horizontal flipping
+- Random rotation
+- Brightness and contrast adjustments
+
+Augmentations applied to training set only to prevent contamination of validation performance.
+
+---
+
+## Model Architecture
+
+**EfficientNet-B0** — pretrained on ImageNet, fine-tuned for 5-class DR grading.
+
+EfficientNet achieves strong performance through compound scaling across three dimensions simultaneously:
+
+- Network depth
+- Network width  
+- Input resolution
+
+This gives it an excellent performance-to-parameter ratio, making it well-suited for medical imaging tasks where computational efficiency matters.
+
+The final classification layer was replaced and fine-tuned to output 5 DR severity classes.
+
+---
+
+## Training Details
+
+| Parameter | Value |
+|---|---|
+| Framework | PyTorch + timm |
+| Loss Function | Cross-Entropy Loss |
+| Optimizer | Adam |
+| Learning Rate | 1e-3 |
+| Epochs | 10 |
+| Best Epoch | 8 |
+| Checkpointing | Best model saved by validation AUC |
+
+---
+
+## Explainability with Grad-CAM
+
+One of the key features that sets this system apart is integrated **Grad-CAM (Gradient-weighted Class Activation Mapping)** explainability.
+
+### Why it matters
+
+In medical AI, accuracy alone is not enough. Clinicians need to understand *why* a model made a prediction before trusting it. Grad-CAM shows exactly which regions of the fundus image drove the model's decision.
+
+### How it works
+
+1. Gradients are extracted from the final convolutional block
+2. Class-specific importance weights are computed
+3. A heatmap is generated and resized to match the input image
+4. The heatmap is overlaid on the original fundus image using OpenCV
+5. The result is displayed directly in the web interface
+
+### Clinical relevance
+
+Grad-CAM allows verification that the model is attending to clinically meaningful retinal features such as microaneurysms, haemorrhages, hard exudates, and neovascularisation — rather than irrelevant image artifacts.
+
+---
+
+## Web Application
+
+A Flask-based web application provides a simple clinical screening interface:
+
+- Upload a fundus image
+- Real-time DR severity prediction
+- Predicted class and confidence score displayed
+- Grad-CAM heatmap visualisation shown alongside the result
+
+Run locally with:
+
+```bash
+python webapp.py
+```
+
+---
+
+## Requirements
+
+```
+torch
+torchvision
+timm
+flask
+flask-cors
+numpy
+Pillow
+opencv-python
+scikit-learn
+matplotlib
+```
+
+Install with:
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## Limitations
+- No external test set evaluation — metrics reflect internal validation only
+- No cross-dataset generalisation study
+- CPU-based training limited number of epochs
+- No real-world clinical validation with expert ophthalmologists
+- Not approved for clinical use
+
+---
+
+## Future Work
+- External dataset validation for generalisation testing
+- Class-weighted loss for better handling of class imbalance
+- Larger EfficientNet variants (B3/B4) for potential performance gains
+- Cloud deployment (Hugging Face Spaces / Render / AWS)
+- Structured clinical report generation per patient
+- Integration into a broader hospital AI diagnostic pipeline
+
+---
+
+## Ethical Considerations
+
+This system is intended **strictly for research and educational purposes**. It is not validated for clinical diagnosis and should not replace professional ophthalmologic assessment. Real-world deployment would require regulatory approval and clinical validation.
+
+---
+
+## Disclaimer
+
+This system is intended **strictly for research and educational use**. It is **not approved** for clinical diagnosis or treatment decisions. All outputs should be reviewed by qualified healthcare professionals.
+
+---
+
+## Author
+
+**Angel Egwaoje**
+Machine Learning Engineer | Computer Vision & Medical Imaging
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/angel-egwaoje-416927280)
+[![GitHub](https://img.shields.io/badge/GitHub-Follow-black?style=flat-square&logo=github)](https://github.com/egwaojeangel)
