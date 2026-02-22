@@ -297,6 +297,7 @@ This system is intended **strictly for research and educational use**. It is **n
 ## Author
 
 **Angel Egwaoje**
+
 Machine Learning Engineer | Computer Vision & Medical Imaging
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/angel-egwaoje-416927280)
