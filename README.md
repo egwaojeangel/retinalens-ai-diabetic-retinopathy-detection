@@ -119,7 +119,7 @@ Click the thumbnail above to watch the full system demo.
 
 ## Overview
 
-Diabetic retinopathy is one of the leading causes of preventable blindness worldwide. Manual grading of fundus images is time-intensive and requires trained ophthalmologists — a resource not always available in underserved regions.
+Diabetic retinopathy is one of the leading causes of preventable blindness worldwide. Manual grading of fundus images is time-consuming and requires trained ophthalmologists, a resource not always available in underserved regions.
 
 This project demonstrates how deep learning can automate DR severity grading across five clinical stages, enabling large-scale screening programs and supporting clinical decision-making. The system goes beyond prediction accuracy by integrating Grad-CAM visualisations, making the model's decisions transparent and clinically interpretable.
 
