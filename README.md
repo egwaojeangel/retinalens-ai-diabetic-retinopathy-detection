@@ -25,6 +25,7 @@ An end-to-end deep learning system for **automated diabetic retinopathy severity
 - [Training Details](#training-details)
 - [Grad-CAM Explainability](#explainability-with-grad-cam)
 - [Web Application](#web-application)
+- [Watch The Full Demo Video](#demo-video)
 - [Limitations](#limitations)
 - [Future Work](#future-work)
 - [Disclaimer](#disclaimer)
@@ -237,6 +238,12 @@ A full **hospital management interface** built with Flask + TailwindCSS:
 ```bash
 python webapp.py
 ```
+
+### Demo Video
+
+[![Watch the Demo](screenshots_on_tumor_seg/Upload_Scan.jpeg)](https://drive.google.com/file/d/1H175DdmRg-RpnKBPS9IlPN6SOq7HavQL/view?usp=drivesdk)
+
+Click the thumbnail above to watch the full system demo.
 
 ---
 
