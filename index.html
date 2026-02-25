@@ -244,7 +244,7 @@
                 <div class="flex items-center gap-6">
                     <div class="flex items-center gap-2 glass px-3 py-1.5 rounded-full border-green-500/20">
                         <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                        <span class="text-[10px] font-bold text-slate-300 uppercase">AI Model v2.3</span>
+                        <span class="text-[10px] font-bold text-slate-300 uppercase">AI Model v1.0</span>
                     </div>
                     <div class="relative">
                         <button onclick="toggleNotifications()" class="glass px-3 py-1.5 rounded-full hover:bg-white/10">
@@ -559,7 +559,7 @@
     <div id="ai-diagnosis-modal" class="modal">
         <div class="glass max-w-6xl w-full mx-4 p-8 rounded-[32px] max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-6">
-                <h3 class="text-2xl font-bold"><i class="fas fa-brain mr-2"></i>AI Retinal Analysis</h3>
+                <h3 class="text-2xl font-bold"><i class="fas fa-microchip mr-2"></i>AI Retinal Scan Analysis</h3>
                 <button onclick="closeModal('ai-diagnosis-modal')" class="text-slate-400 hover:text-white">
                     <i class="fas fa-times text-xl"></i>
                 </button>
@@ -597,10 +597,21 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="glass p-4 rounded-xl border-l-4" id="ai-recommendation-box" style="border-color: #2dd4bf">
+                            <h4 class="text-xs font-bold text-slate-400 uppercase mb-2">
+                                <i class="fas fa-stethoscope mr-1"></i> Clinical Recommendation
+                            </h4>
+                            <p class="text-sm text-slate-200" id="ai-recommendation">-</p>
+                        </div>
 
                         <div class="glass p-6 rounded-xl">
                             <h4 class="text-sm font-bold text-slate-400 uppercase mb-4">Probability Distribution</h4>
                             <canvas id="probability-chart"></canvas>
+                        </div>
+
+                        <div class="glass p-4 rounded-xl border border-red-500/30 bg-red-500/5">
+                            <p class="text-xs font-bold text-red-400 uppercase tracking-widest mb-1"><i class="fas fa-triangle-exclamation mr-1"></i> Medical Disclaimer</p>
+                            <p class="text-xs text-red-400 leading-relaxed">This analysis is intended solely to assist qualified healthcare professionals and does not constitute a clinical diagnosis. Results should not be used as a substitute for professional medical evaluation, judgment, or treatment. All findings must be reviewed and validated by a licensed ophthalmologist or retinal specialist before any clinical decision is made. The system does not account for individual patient history, comorbidities, or other clinical factors that may affect diagnosis and management.</p>
                         </div>
                     </div>
                 </div>
@@ -637,9 +648,10 @@
                         <h4 class="text-sm font-bold text-blue-400 uppercase mb-3">AI Explanation</h4>
                         <p class="text-sm text-slate-300 mb-4" id="ai-explanation-text"></p>
                         <div class="bg-white/5 rounded-lg p-3 text-xs">
-                            <p class="text-slate-400"><strong>Model:</strong> Deep Convolutional Neural Network</p>
-                            <p class="text-slate-400"><strong>Architecture:</strong> Custom Vision Transformer</p>
-                            <p class="text-slate-400"><strong>Training Data:</strong> 1.2M retinal images</p>
+                            <p class="text-slate-400"><strong>Model:</strong> EfficientNet-B4</p>
+                            <p class="text-slate-400"><strong>Trained on:</strong> EyePACS + APTOS + MESSIDOR (115,241 images)</p>
+                            <p class="text-slate-400"><strong>Grad-CAM:</strong> Last conv layer activation mapping</p>
+                            <p class="text-slate-400"><strong>Classes:</strong> Grade 0 (No DR) → Grade 4 (Proliferative DR)</p>
                         </div>
                     </div>
                 </div>
@@ -911,7 +923,7 @@
                             <div class="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center">
                                 <i class="fas fa-eye text-green-400 text-xl"></i>
                             </div>
-                            <span class="text-xs font-bold text-green-400">97.2%</span>
+                            <span class="text-xs font-bold text-green-400">64.9%</span>
                         </div>
                         <h3 class="text-3xl font-bold mb-1">${todayDiagnoses}</h3>
                         <p class="text-sm text-slate-400">AI Diagnoses Today</p>
@@ -924,19 +936,19 @@
                         <div class="space-y-4">
                             <div class="flex justify-between items-center">
                                 <span class="text-sm">Model Version</span>
-                                <span class="font-bold text-teal-400">v2.3 Active</span>
+                                <span class="font-bold text-teal-400">v1.0 Active</span>
                             </div>
                             <div class="flex justify-between items-center">
                                 <span class="text-sm">Accuracy</span>
-                                <span class="font-bold">98.23%</span>
+                                <span class="font-bold">64.9%</span>
                             </div>
                             <div class="flex justify-between items-center">
-                                <span class="text-sm">F1-Score</span>
-                                <span class="font-bold">98.27%</span>
+                                <span class="text-sm">Macro F1</span>
+                                <span class="font-bold">58.79%</span>
                             </div>
                             <div class="flex justify-between items-center">
-                                <span class="text-sm">Validation AUC</span>
-                                <span class="font-bold">99.6%</span>
+                                <span class="text-sm">Training Images</span>
+                                <span class="font-bold">115,241</span>
                             </div>
                             <div class="mt-4 p-3 bg-green-500/10 rounded-lg border border-green-500/20">
                                 <div class="flex items-center gap-2">
@@ -1032,16 +1044,26 @@
                 });
             }
 
-            // Disease distribution chart
+            // Disease distribution chart — DR grades
             const diseaseCtx = document.getElementById('disease-chart');
             if (diseaseCtx) {
+                // Compute distribution from saved diagnoses
+                const gradeCounts = [0, 0, 0, 0, 0];
+                diagnoses.forEach(d => {
+                    const g = d.grade !== undefined ? d.grade : null;
+                    if (g !== null && g >= 0 && g <= 4) gradeCounts[g]++;
+                });
+                // Fallback demo data if no real diagnoses
+                // Always use demo data unless all 5 grades are represented
+                const gradesPresent = gradeCounts.filter(c => c > 0).length;
+                const chartData = gradesPresent >= 3 ? gradeCounts : [12, 8, 9, 5, 6];
                 new Chart(diseaseCtx, {
                     type: 'doughnut',
                     data: {
-                        labels: ['Diabetic Retinopathy', 'Glaucoma', 'Macular Degeneration', 'Normal'],
+                        labels: ['Grade 0 – No DR', 'Grade 1 – Mild', 'Grade 2 – Moderate', 'Grade 3 – Severe', 'Grade 4 – Proliferative'],
                         datasets: [{
-                            data: [35, 25, 15, 25],
-                            backgroundColor: ['#ef4444', '#f59e0b', '#8b5cf6', '#10b981']
+                            data: chartData,
+                            backgroundColor: ['#10b981', '#f59e0b', '#f97316', '#ef4444', '#b91c1c']
                         }]
                     },
                     options: {
@@ -1208,7 +1230,7 @@
                             </div>
                             <div>
                                 <h4 class="font-bold">Model Accuracy</h4>
-                                <p class="text-2xl font-bold text-teal-400">97.2%</p>
+                                <p class="text-2xl font-bold text-teal-400">64.9%</p>
                             </div>
                         </div>
                     </div>
@@ -1637,7 +1659,7 @@
                             <div>
                                 <label class="text-sm font-bold text-slate-400 mb-2 block">Active Model Version</label>
                                 <select class="glass px-4 py-3 rounded-xl w-full max-w-md outline-none">
-                                    <option>v2.3 (Current)</option>
+                                    <option>v1.0 (Current)</option>
                                     <option>v2.2</option>
                                     <option>v2.1</option>
                                 </select>
@@ -2292,12 +2314,28 @@
             }
         }
 
-        function runAIDiagnosis() {
+        // DR grade metadata – mirrors DR_GRADES in webapp.py
+        const DR_GRADES = {
+            0: { name: 'No DR',            severity: 'Normal',        color: 'green'  },
+            1: { name: 'Mild DR',          severity: 'Mild',          color: 'yellow' },
+            2: { name: 'Moderate DR',      severity: 'Moderate',      color: 'orange' },
+            3: { name: 'Severe DR',        severity: 'Severe',        color: 'red'    },
+            4: { name: 'Proliferative DR', severity: 'Proliferative', color: 'red'    },
+        };
+
+        const DR_EXPLANATIONS = {
+            0: 'No signs of diabetic retinopathy were detected. The retinal vasculature, optic disc, and macula appear within normal limits. Continued regular screening is recommended for ongoing monitoring.',
+            1: 'Mild non-proliferative diabetic retinopathy detected. The AI identified early microaneurysms — small bulges in retinal blood vessel walls. Tight glycaemic control and annual follow-up are advised.',
+            2: 'Moderate non-proliferative diabetic retinopathy detected. Features include microaneurysms, dot/blot haemorrhages, hard exudates, and cotton-wool spots. Optimise blood sugar and blood pressure; ophthalmologist review recommended.',
+            3: 'Severe non-proliferative diabetic retinopathy detected. Extensive haemorrhages in multiple quadrants, venous beading, and intraretinal microvascular abnormalities are present. Urgent ophthalmology referral is required.',
+            4: 'Proliferative diabetic retinopathy detected. New abnormal blood vessels (neovascularisation) are visible on the disc or elsewhere, carrying high risk of vitreous haemorrhage and tractional retinal detachment. Urgent specialist intervention is required.',
+        };
+
+        async function runAIDiagnosis() {
             if (!currentAIImage) {
                 showNotification('Please upload an image first', 'error');
                 return;
             }
-
             if (!selectedPatientForAI) {
                 showNotification('No patient selected', 'error');
                 return;
@@ -2308,53 +2346,58 @@
             document.getElementById('run-ai-btn').disabled = true;
             document.getElementById('run-ai-btn').innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Analyzing...';
 
-            // Simulate AI processing - FIXED: Generate consistent result based on image
-            setTimeout(() => {
-                // Use image hash to generate consistent result
-                const imageHash = currentAIImage.substring(50, 60);
-                const hashValue = imageHash.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-                
-                const diagnoses = [
-                    { name: 'Diabetic Retinopathy', severity: 'Moderate', confidence: 94.3, probs: { DR: 94.3, Glaucoma: 3.2, MD: 1.5, Normal: 1.0 } },
-                    { name: 'Glaucoma', severity: 'Mild', confidence: 89.7, probs: { DR: 5.1, Glaucoma: 89.7, MD: 3.2, Normal: 2.0 } },
-                    { name: 'Macular Degeneration', severity: 'Severe', confidence: 96.1, probs: { DR: 2.0, Glaucoma: 1.2, MD: 96.1, Normal: 0.7 } },
-                    { name: 'Normal', severity: 'Normal', confidence: 97.8, probs: { DR: 1.0, Glaucoma: 0.8, MD: 0.4, Normal: 97.8 } }
-                ];
+            try {
+                // Convert base64 data URL → Blob for multipart upload
+                const res  = await fetch(currentAIImage);
+                const blob = await res.blob();
+                const formData = new FormData();
+                formData.append('image', blob, 'retina.png');
 
-                // Select result based on hash
-                const resultIndex = hashValue % diagnoses.length;
-                const result = diagnoses[resultIndex];
-                
-                // Generate dynamic explanation based on diagnosis
-                const explanations = {
-                    'Diabetic Retinopathy': `The AI model detected Diabetic Retinopathy with ${result.confidence.toFixed(1)}% confidence. Analysis shows ${result.severity.toLowerCase()} severity based on detected features including microaneurysms, hard exudates, hemorrhages, and vascular abnormalities in the retinal fundus image. These findings suggest damage to blood vessels in the retina due to prolonged high blood sugar levels.`,
-                    'Glaucoma': `The AI model detected Glaucoma with ${result.confidence.toFixed(1)}% confidence. Analysis shows ${result.severity.toLowerCase()} severity based on detected features including optic disc cupping, increased cup-to-disc ratio, and nerve fiber layer thinning. These indicators suggest elevated intraocular pressure affecting the optic nerve.`,
-                    'Macular Degeneration': `The AI model detected Macular Degeneration with ${result.confidence.toFixed(1)}% confidence. Analysis shows ${result.severity.toLowerCase()} severity based on detected features including drusen deposits, retinal pigment epithelium changes, and central retinal deterioration. These findings indicate age-related damage to the macula affecting central vision.`,
-                    'Normal': `The AI model analyzed the retinal image with ${result.confidence.toFixed(1)}% confidence and found no significant pathological abnormalities. The retinal structure, blood vessels, optic disc, and macula all appear within normal parameters. Regular screening is still recommended for ongoing eye health monitoring.`
-                };
-                
+                const response = await fetch('http://localhost:5000/api/analyze', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.error || 'Server error');
+                }
+
+                const data = await response.json();
+
+                // Build currentAIResult from real API response
+                const grade     = data.grade;
+                const gradeInfo = DR_GRADES[grade] || DR_GRADES[0];
+
                 currentAIResult = {
-                    diagnosis: result.name,
-                    confidence: result.confidence.toFixed(1),
-                    severity: result.severity,
-                    probabilities: {
-                        'Diabetic Retinopathy': result.probs.DR,
-                        'Glaucoma': result.probs.Glaucoma,
-                        'Macular Degeneration': result.probs.MD,
-                        'Normal': result.probs.Normal
-                    },
-                    explanation: explanations[result.name]
+                    diagnosis:      data.result,
+                    grade:          grade,
+                    confidence:     parseFloat(data.confidence).toFixed(1),
+                    severity:       data.severity || gradeInfo.severity,
+                    probabilities:  data.probabilities,
+                    explanation:    DR_EXPLANATIONS[grade],
+                    recommendation: data.recommendation,
+                    color:          data.color,
+                    heatmapData:    data.heatmap,
+                    originalImage:  data.original_image || currentAIImage,
                 };
 
                 displayAIResults();
-                generateGradCAM();
-                
+                applyBackendGradCAM(data.heatmap);
+
+                showNotification('AI analysis complete', 'success');
+
+            } catch (err) {
+                console.error('AI analysis error:', err);
+                const msg = err.message || 'Unknown error';
+                // Show clean message for validation errors, generic for connection errors
+                const isValidation = msg.includes('retinal') || msg.includes('fundus') || msg.includes('scan');
+                showNotification(isValidation ? msg : 'Connection error — is webapp.py running?', 'error');
+            } finally {
                 document.getElementById('ai-scanning').classList.add('hidden');
                 document.getElementById('run-ai-btn').disabled = false;
                 document.getElementById('run-ai-btn').innerHTML = '<i class="fas fa-eye mr-2"></i> Run AI Analysis';
-                
-                showNotification('AI analysis complete', 'success');
-            }, 3000);
+            }
         }
 
         function displayAIResults() {
@@ -2364,23 +2407,53 @@
             document.getElementById('report-ai-btn').classList.remove('hidden');
 
             const severityColors = {
-                'Normal': 'text-green-400',
-                'Mild': 'text-yellow-400',
-                'Moderate': 'text-orange-400',
-                'Severe': 'text-red-400'
+                'Normal':         'text-green-400',
+                'Mild':           'text-yellow-400',
+                'Moderate':       'text-orange-400',
+                'Severe':         'text-red-400',
+                'Proliferative':  'text-red-500',
             };
 
-            document.getElementById('ai-diagnosis').textContent = currentAIResult.diagnosis;
+            // Grade badge with number
+            const gradeLabel = currentAIResult.grade !== undefined
+                ? `Grade ${currentAIResult.grade} — ${currentAIResult.diagnosis}`
+                : currentAIResult.diagnosis;
+
+            document.getElementById('ai-diagnosis').textContent = gradeLabel;
             document.getElementById('ai-confidence').textContent = currentAIResult.confidence + '%';
             document.getElementById('ai-severity').textContent = currentAIResult.severity;
-            document.getElementById('ai-severity').className = 'font-bold ' + severityColors[currentAIResult.severity];
+            document.getElementById('ai-severity').className =
+                'font-bold ' + (severityColors[currentAIResult.severity] || 'text-slate-300');
             document.getElementById('ai-explanation-text').textContent = currentAIResult.explanation;
+
+            // Show recommendation from backend
+            if (currentAIResult.recommendation) {
+                document.getElementById('ai-recommendation').textContent = currentAIResult.recommendation;
+                // Use the grade color from backend for the recommendation border
+                if (currentAIResult.color) {
+                    document.getElementById('ai-recommendation-box').style.borderColor = currentAIResult.color;
+                }
+            }
+
+            // Update model info to reflect actual architecture
+            const modelInfoEl = document.querySelector('#ai-explanation-panel .bg-white\\/5');
+            if (modelInfoEl) {
+                modelInfoEl.innerHTML = `
+                    <p class="text-slate-400"><strong>Model:</strong> EfficientNet-B4</p>
+                    <p class="text-slate-400"><strong>Task:</strong> 5-class DR Grading</p>
+                    <p class="text-slate-400"><strong>Trained on:</strong> EyePACS + APTOS + MESSIDOR (115,241 images)</p>
+                    <p class="text-slate-400"><strong>Classes:</strong> Grade 0 (No DR) → Grade 4 (Proliferative DR)</p>
+                `;
+            }
 
             // Create probability chart
             const ctx = document.getElementById('probability-chart');
             if (probabilityChart) {
                 probabilityChart.destroy();
             }
+
+            // 5 DR grade colours: green, yellow, orange, red, dark-red
+            const drColors = ['#10b981', '#f59e0b', '#f97316', '#ef4444', '#b91c1c'];
 
             probabilityChart = new Chart(ctx, {
                 type: 'bar',
@@ -2389,7 +2462,7 @@
                     datasets: [{
                         label: 'Probability (%)',
                         data: Object.values(currentAIResult.probabilities),
-                        backgroundColor: ['#ef4444', '#f59e0b', '#8b5cf6', '#10b981']
+                        backgroundColor: drColors,
                     }]
                 },
                 options: {
@@ -2414,55 +2487,34 @@
             });
         }
 
-        function generateGradCAM() {
+        function applyBackendGradCAM(heatmapDataUrl) {
+            if (!heatmapDataUrl) return;
+            // Hide canvas — backend already composites heatmap + circles into one image
             const canvas = document.getElementById('gradcam-canvas');
-            const ctx = canvas.getContext('2d');
+            canvas.classList.add('hidden');
+            // Directly swap preview image to the composited result
             const img = document.getElementById('ai-preview-image');
-
-            canvas.width = img.naturalWidth;
-            canvas.height = img.naturalHeight;
-
-            // Create gradient heatmap
-            const gradient = ctx.createRadialGradient(
-                canvas.width * 0.4, canvas.height * 0.5, 0,
-                canvas.width * 0.4, canvas.height * 0.5, canvas.width * 0.4
-            );
-            
-            gradient.addColorStop(0, 'rgba(255, 0, 0, 0.8)');
-            gradient.addColorStop(0.3, 'rgba(255, 165, 0, 0.6)');
-            gradient.addColorStop(0.6, 'rgba(255, 255, 0, 0.3)');
-            gradient.addColorStop(1, 'rgba(255, 255, 0, 0)');
-
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Add secondary hotspot
-            const gradient2 = ctx.createRadialGradient(
-                canvas.width * 0.7, canvas.height * 0.3, 0,
-                canvas.width * 0.7, canvas.height * 0.3, canvas.width * 0.2
-            );
-            
-            gradient2.addColorStop(0, 'rgba(255, 100, 0, 0.6)');
-            gradient2.addColorStop(0.5, 'rgba(255, 200, 0, 0.3)');
-            gradient2.addColorStop(1, 'rgba(255, 255, 0, 0)');
-
-            ctx.fillStyle = gradient2;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            img.src = heatmapDataUrl;
+            img.classList.remove('hidden');
+            document.getElementById('ai-empty-state').classList.add('hidden');
+            // Mark as active
+            gradcamEnabled = true;
+            document.getElementById('gradcam-toggle').innerHTML = '<i class="fas fa-eye-slash mr-1"></i> Hide GradCAM';
         }
 
         function toggleGradCAM() {
             gradcamEnabled = !gradcamEnabled;
-            const canvas = document.getElementById('gradcam-canvas');
-            const controls = document.getElementById('gradcam-controls');
-            const btn = document.getElementById('gradcam-toggle');
-
+            const btn        = document.getElementById('gradcam-toggle');
+            const previewImg = document.getElementById('ai-preview-image');
             if (gradcamEnabled) {
-                canvas.classList.remove('hidden');
-                controls.classList.remove('hidden');
+                // Show heatmap + circles image
+                if (currentAIResult && currentAIResult.heatmapData) {
+                    previewImg.src = currentAIResult.heatmapData;
+                }
                 btn.innerHTML = '<i class="fas fa-eye-slash mr-1"></i> Hide GradCAM';
             } else {
-                canvas.classList.add('hidden');
-                controls.classList.add('hidden');
+                // Restore original fundus image
+                previewImg.src = (currentAIResult && currentAIResult.originalImage) ? currentAIResult.originalImage : currentAIImage;
                 btn.innerHTML = '<i class="fas fa-eye mr-1"></i> GradCAM';
             }
         }
@@ -2479,6 +2531,7 @@
                 id: 'DIAG-' + Date.now(),
                 patientId: selectedPatientForAI.id,
                 diagnosis: currentAIResult.diagnosis,
+                grade: currentAIResult.grade,
                 confidence: currentAIResult.confidence,
                 severity: currentAIResult.severity,
                 image: currentAIImage,
