@@ -33,7 +33,7 @@ An end-to-end deep learning system for **automated diabetic retinopathy severity
 
 ## Results
 
-Trained for 16 epochs on 115,241 fundus images across three clinical datasets. Performance is consistent with published research on this task — 5-class DR grading on real clinical data is an inherently difficult problem.
+Trained for 16 epochs on 115,241 fundus images across three clinical datasets. Performance is consistent with published research on this task, a 5-class DR grading on real clinical data is an inherently difficult problem.
 
 | Metric | Score |
 |---|---|
