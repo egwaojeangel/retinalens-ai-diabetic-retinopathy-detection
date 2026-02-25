@@ -241,7 +241,7 @@ python webapp.py
 
 ### Demo Video
 
-[![Watch the Demo](Diabetic_retinopathy_screenshots/login_page.png)](https://drive.google.com/file/d/1H175DdmRg-RpnKBPS9IlPN6SOq7HavQL/view?usp=drivesdk)
+[![Watch the Demo](images/login_page.png)](https://drive.google.com/file/d/1H175DdmRg-RpnKBPS9IlPN6SOq7HavQL/view?usp=drivesdk)
 
 Click the thumbnail above to watch the full system demo.
 
