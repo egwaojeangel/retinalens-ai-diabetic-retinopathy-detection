@@ -291,8 +291,9 @@ pip install -r requirements.txt
 ## Author
 
 **Angel Egwaoje**  
+
 Machine Learning Engineer | Medical Imaging & Computer Vision  
-MSc Applied AI in Medical Imaging — University of Manchester *(Incoming)*
+
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/angel-egwaoje-416927280)
 [![GitHub](https://img.shields.io/badge/GitHub-Follow-black?style=flat-square&logo=github)](https://github.com/egwaojeangel)
