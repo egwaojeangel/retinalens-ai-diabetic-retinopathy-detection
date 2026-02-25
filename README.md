@@ -1,15 +1,17 @@
-# 👁️ Diabetic Retinopathy Detection Using EfficientNet on Fundus Images
+# 👁️ RetinaLens AI — Diabetic Retinopathy Detection
 
 ![Python](https://img.shields.io/badge/Python-3.10+-blue?style=flat-square&logo=python)
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-ee4c2c?style=flat-square&logo=pytorch)
 ![Flask](https://img.shields.io/badge/Flask-3.x-black?style=flat-square&logo=flask)
-![AUC](https://img.shields.io/badge/Validation%20AUC-99.60%25-brightgreen?style=flat-square)
-![Accuracy](https://img.shields.io/badge/Accuracy-98.23%25-brightgreen?style=flat-square)
+![Accuracy](https://img.shields.io/badge/Accuracy-64.9%25-blue?style=flat-square)
+![F1](https://img.shields.io/badge/Macro%20F1-58.79%25-blue?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)
 
-**Core Stack:** Python (PyTorch, Flask) · EfficientNet-B0 · Transfer Learning · Grad-CAM · Medical Imaging
+**Core Stack:** Python · PyTorch · EfficientNet-B4 · Flask · Grad-CAM · OpenCV
 
-An automated deep learning system for **diabetic retinopathy severity grading** from fundus images, achieving **99.60% AUC** and **98.23% accuracy** across five clinical severity stages. Deployed as a Flask web application with integrated **Grad-CAM explainability** for transparent, interpretable predictions.
+An end-to-end deep learning system for **automated diabetic retinopathy severity grading** from fundus photographs, trained on **115,241 real clinical images** from three major datasets. Deployed as a full hospital management web application with **Grad-CAM explainability**, retinal image validation, and a 5-class severity grading system.
+
+![RetinaLens Demo](https://drive.google.com/uc?export=view&id=1HSe-0Kkr1bgMlZcRfFqL_rmE7-rr5ZMB)
 
 ---
 
@@ -31,18 +33,26 @@ An automated deep learning system for **diabetic retinopathy severity grading** 
 
 ## Results
 
-Strong validation performance across all five DR severity classes:
+Trained for 16 epochs on 115,241 fundus images across three clinical datasets. Performance is consistent with published research on this task — 5-class DR grading on real clinical data is an inherently difficult problem.
 
 | Metric | Score |
 |---|---|
-| Validation AUC | **99.60%** |
-| Validation Accuracy | **98.23%** |
-| Validation F1 Score | **98.27%** |
-| Best Epoch | Epoch 8 |
+| Validation Accuracy | **64.9%** |
+| Macro F1 Score | **58.79%** |
+| Best Epoch | Epoch 14 |
+| Training Images | 115,241 |
 
-![Validation Results](images/diabetic_retinopathy_results.png)
+### Per-Class F1 at Best Epoch
 
-AUC was selected as the primary metric due to its robustness against class imbalance and its clinical relevance in screening tasks.
+| Grade | Class | F1 Score |
+|---|---|---|
+| Grade 0 | No DR | 0.775 |
+| Grade 1 | Mild | 0.461 |
+| Grade 2 | Moderate | 0.488 |
+| Grade 3 | Severe | 0.511 |
+| Grade 4 | Proliferative | 0.631 |
+
+> Published benchmarks on the same combined dataset (EyePACS + APTOS + MESSIDOR) report 60–70% accuracy for 5-class grading — results here are within that range.
 
 ---
 
@@ -77,113 +87,100 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 4. Download the dataset
+### 4. Download the model weights
 
-Download the APTOS 2019 dataset from Kaggle:
-👉 [APTOS 2019 Blindness Detection](https://www.kaggle.com/c/aptos2019-blindness-detection/data)
+Download `best_model.pth` from the Kaggle output tab of the training notebook and place it in the repo root.
 
-Place it in the root of the repository:
-
-```
-diabetic_retinopathy_detection/
-├── dataset/
-│   ├── train_images/
-│   └── train.csv
-├── images/
-├── webapp.py
-├── train.py
-└── ...
-```
-
-### 5. Train the model
-
-```bash
-python train.py
-```
-
-### 6. Run the web application
+### 5. Run the web application
 
 ```bash
 python webapp.py
 ```
 
-Then open your browser at: **http://127.0.0.1:5000**
-
-### Demo Video
-
-[![Demo Video](images/login_page.png)](https://drive.google.com/file/d/1juVdxAc2fzMCkKu3p3wP4xwWGuSdK_11/view?usp=sharing)
-
-Click the thumbnail above to watch the full system demo.
+Open your browser at: **http://127.0.0.1:5000**
 
 ---
 
 ## Overview
 
-Diabetic retinopathy is one of the leading causes of preventable blindness worldwide. Manual grading of fundus images is time-consuming and requires trained ophthalmologists, a resource not always available in underserved regions.
+Diabetic retinopathy is one of the leading causes of preventable blindness worldwide, affecting over 100 million people with diabetes. Manual grading of fundus images is time-consuming and requires trained ophthalmologists — a resource not always available in underserved regions.
 
-This project demonstrates how deep learning can automate DR severity grading across five clinical stages, enabling large-scale screening programs and supporting clinical decision-making. The system goes beyond prediction accuracy by integrating Grad-CAM visualisations, making the model's decisions transparent and clinically interpretable.
+This project builds an end-to-end screening pipeline that:
+- Grades DR severity across **5 clinical stages** automatically
+- Uses **Grad-CAM** to show which retinal regions drove each prediction
+- Validates that uploaded images are actual fundus photographs before running inference
+- Presents results inside a full **hospital management interface** with patient records, analytics, and clinical recommendations
 
 ### DR Severity Classes
 
-| Grade | Stage |
-|---|---|
-| 0 | No DR |
-| 1 | Mild |
-| 2 | Moderate |
-| 3 | Severe |
-| 4 | Proliferative DR |
+| Grade | Stage | Recommendation |
+|---|---|---|
+| 0 | No DR | Routine annual screening |
+| 1 | Mild | Optimise blood sugar control, re-screen in 12 months |
+| 2 | Moderate | Refer to ophthalmologist, re-screen in 6 months |
+| 3 | Severe | Urgent ophthalmology referral within 4 weeks |
+| 4 | Proliferative DR | Immediate referral — risk of vision loss |
 
 ---
 
 ## Dataset
 
-**APTOS 2019 Blindness Detection** (Kaggle)
+Training used a combined dataset of three major clinical sources:
 
-Color fundus images graded on a 0–4 DR severity scale by clinical experts.
+| Dataset | Description |
+|---|---|
+| EyePACS | Large-scale US screening programme |
+| APTOS 2019 | Kaggle competition dataset from India |
+| MESSIDOR | French ophthalmology research dataset |
 
 | Split | Images |
 |---|---|
-| Training | 2,929 |
-| Validation | 723 |
-| **Total** | **3,652** |
+| Training | ~92,000 |
+| Validation | ~23,000 |
+| **Total** | **115,241** |
 
-Stratified splitting was applied to preserve class distribution across subsets.
-
-> ⚠️ Dataset not included in this repository due to size and licensing.
-> Download from: [Kaggle – APTOS 2019](https://www.kaggle.com/c/aptos2019-blindness-detection/data)
+> ⚠️ Dataset not included in this repository due to size and licensing.  
+> Available at: [Kaggle – EyePACS + APTOS + MESSIDOR](https://www.kaggle.com/datasets/ascanipek/eyepacs-aptos-messidor-diabetic-retinopathy)
 
 ---
 
 ## Methodology
 
 ### Image Preprocessing
-- Resized to **224 × 224 pixels** (EfficientNet-B0 input requirement)
-- Converted to 3-channel RGB format
-- ImageNet normalisation applied
+- Resized to **260 × 260 pixels** (EfficientNet-B4 input size)
+- RGB format with ImageNet normalisation
 - Tensor conversion via PyTorch transforms
 
 ### Data Augmentation (Training Only)
-- Random horizontal flipping
-- Random rotation
-- Brightness and contrast adjustments
+- Random horizontal and vertical flipping
+- Random rotation (±15°)
+- Brightness, contrast, and saturation jitter
+- Random affine transforms
 
-Augmentations applied to training set only to prevent contamination of validation performance.
+### Retinal Image Validation
+Before inference, images are validated as genuine fundus photographs using three checks:
+1. **Dark border / bright centre** — fundus images always have a black background with a bright circular retinal disc
+2. **Circular region detection** — the retinal disc must occupy at least 20% of the image
+3. **Red/orange colour profile** — fundus images have a characteristic warm colour tone
+
+Non-fundus images are rejected before reaching the model.
 
 ---
 
 ## Model Architecture
 
-**EfficientNet-B0** — pretrained on ImageNet, fine-tuned for 5-class DR grading.
+**EfficientNet-B4** — pretrained on ImageNet, fine-tuned for 5-class DR grading.
 
-EfficientNet achieves strong performance through compound scaling across three dimensions simultaneously:
+| Component | Detail |
+|---|---|
+| Backbone | EfficientNet-B4 (timm) |
+| Input Size | 260 × 260 |
+| Output Classes | 5 |
+| Dropout | 0.4 |
+| Drop Path Rate | 0.2 |
+| Pretrained | ImageNet |
 
-- Network depth
-- Network width  
-- Input resolution
-
-This gives it an excellent performance-to-parameter ratio, making it well-suited for medical imaging tasks where computational efficiency matters.
-
-The final classification layer was replaced and fine-tuned to output 5 DR severity classes.
+EfficientNet scales network depth, width, and input resolution simultaneously using a compound coefficient. B4 was chosen for its higher capacity to capture fine retinal features such as microaneurysms, haemorrhages, and neovascularisation.
 
 ---
 
@@ -193,46 +190,49 @@ The final classification layer was replaced and fine-tuned to output 5 DR severi
 |---|---|
 | Framework | PyTorch + timm |
 | Loss Function | Cross-Entropy Loss |
-| Optimizer | Adam |
-| Learning Rate | 1e-3 |
-| Epochs | 10 |
-| Best Epoch | 8 |
-| Checkpointing | Best model saved by validation AUC |
+| Optimizer | AdamW |
+| Learning Rate | 1e-4 |
+| Scheduler | CosineAnnealingLR |
+| Epochs Completed | 16 / 50 (Kaggle timeout) |
+| Best Epoch | 14 |
+| Early Stopping Patience | 10 |
+| Batch Size | 32 |
+| Hardware | Kaggle GPU (P100) |
+| Training Time | ~12 hours |
+
+Training was run on Kaggle with a 12-hour GPU session limit. Early stopping patience was at 2/10 when the session timed out, indicating the model was still learning.
 
 ---
 
 ## Explainability with Grad-CAM
 
-One of the key features that sets this system apart is integrated **Grad-CAM (Gradient-weighted Class Activation Mapping)** explainability.
-
-### Why it matters
-
-In medical AI, accuracy alone is not enough. Clinicians need to understand *why* a model made a prediction before trusting it. Grad-CAM shows exactly which regions of the fundus image drove the model's decision.
+A proper **Grad-CAM** implementation is integrated using forward and backward hooks on EfficientNet-B4's last convolutional block.
 
 ### How it works
 
-1. Gradients are extracted from the final convolutional block
-2. Class-specific importance weights are computed
-3. A heatmap is generated and resized to match the input image
-4. The heatmap is overlaid on the original fundus image using OpenCV
-5. The result is displayed directly in the web interface
+1. Forward hook saves feature map activations from the last conv block
+2. Backward hook saves gradients flowing into that layer
+3. Gradients are globally average-pooled to produce per-channel importance weights
+4. Activations are weighted and summed → ReLU → normalised to [0, 1]
+5. CAM is resized to the original image dimensions
+6. An **eye mask** is applied — the CAM is zeroed outside the retinal disc before the JET colormap is applied, preventing hotspots from bleeding into the black background
+7. The masked heatmap is blended onto the original fundus image
 
-### Clinical relevance
-
-Grad-CAM allows verification that the model is attending to clinically meaningful retinal features such as microaneurysms, haemorrhages, hard exudates, and neovascularisation — rather than irrelevant image artifacts.
+This approach follows the original Grad-CAM paper (Selvaraju et al., 2017) and allows clinical users to verify the model is attending to meaningful retinal structures.
 
 ---
 
 ## Web Application
 
-A Flask-based web application provides a simple clinical screening interface:
+A full **hospital management interface** built with Flask + TailwindCSS:
 
-- Upload a fundus image
-- Real-time DR severity prediction
-- Predicted class and confidence score displayed
-- Grad-CAM heatmap visualisation shown alongside the result
-
-Run locally with:
+- 🔐 Secure login system
+- 👥 Patient record management
+- 🔬 AI retinal scan analysis with Grad-CAM visualisation
+- 📊 Probability distribution chart per prediction
+- 📋 Clinical recommendations per DR grade
+- 📈 Analytics dashboard with disease distribution
+- ⚠️ Medical disclaimer on all AI outputs
 
 ```bash
 python webapp.py
@@ -255,8 +255,6 @@ scikit-learn
 matplotlib
 ```
 
-Install with:
-
 ```bash
 pip install -r requirements.txt
 ```
@@ -264,41 +262,37 @@ pip install -r requirements.txt
 ---
 
 ## Limitations
-- No external test set evaluation — metrics reflect internal validation only
+
+- Trained on preprocessed images — performance may vary on raw clinical fundus photos
+- Session timed out at epoch 16/50 — model likely underfit relative to its potential
+- No external test set evaluation beyond the validation split
 - No cross-dataset generalisation study
-- CPU-based training limited number of epochs
-- No real-world clinical validation with expert ophthalmologists
+- Not validated by clinical ophthalmologists
 - Not approved for clinical use
 
 ---
 
 ## Future Work
-- External dataset validation for generalisation testing
-- Class-weighted loss for better handling of class imbalance
-- Larger EfficientNet variants (B3/B4) for potential performance gains
-- Cloud deployment (Hugging Face Spaces / Render / AWS)
+
+- Resume training to full 50 epochs with class-weighted loss
+- External validation on unseen datasets (Messidor-2, DIARETDB)
+- Larger EfficientNet variants or Vision Transformer backbone
+- Cloud deployment (Hugging Face Spaces / Render)
 - Structured clinical report generation per patient
-- Integration into a broader hospital AI diagnostic pipeline
-
----
-
-## Ethical Considerations
-
-This system is intended **strictly for research and educational purposes**. It is not validated for clinical diagnosis and should not replace professional ophthalmologic assessment. Real-world deployment would require regulatory approval and clinical validation.
 
 ---
 
 ## Disclaimer
 
-This system is intended **strictly for research and educational use**. It is **not approved** for clinical diagnosis or treatment decisions. All outputs should be reviewed by qualified healthcare professionals.
+> ⚠️ This AI system is intended **solely to assist qualified healthcare professionals** and does not replace clinical judgement. All outputs must be reviewed and validated by a licensed medical professional before being used in any clinical decision-making process.
 
 ---
 
 ## Author
 
-**Angel Egwaoje**
-
-Machine Learning Engineer | Computer Vision & Medical Imaging
+**Angel Egwaoje**  
+Machine Learning Engineer | Medical Imaging & Computer Vision  
+MSc Applied AI in Medical Imaging — University of Manchester *(Incoming)*
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/angel-egwaoje-416927280)
 [![GitHub](https://img.shields.io/badge/GitHub-Follow-black?style=flat-square&logo=github)](https://github.com/egwaojeangel)
