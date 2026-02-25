@@ -241,7 +241,7 @@ python webapp.py
 
 ### Demo Video
 
-[![Watch the Demo](images/login_page.png)](https://drive.google.com/file/d/1H175DdmRg-RpnKBPS9IlPN6SOq7HavQL/view?usp=drivesdk)
+[![Watch the Demo](images/login_page.png)](https://drive.google.com/file/d/1xroETJz2pSxljJKXd7kL7IyyaRJQn3lQ/view?usp=sharing)
 
 Click the thumbnail above to watch the full system demo.
 
