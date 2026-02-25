@@ -103,7 +103,7 @@ Open your browser at: **http://127.0.0.1:5000**
 
 ## Overview
 
-Diabetic retinopathy is one of the leading causes of preventable blindness worldwide, affecting over 100 million people with diabetes. Manual grading of fundus images is time-consuming and requires trained ophthalmologists — a resource not always available in underserved regions.
+Diabetic retinopathy is one of the leading causes of preventable blindness worldwide, affecting over 100 million people with diabetes. Manual grading of fundus images is time-consuming and requires trained ophthalmologists, which is a resource not always available in underserved regions.
 
 This project builds an end-to-end screening pipeline that:
 - Grades DR severity across **5 clinical stages** automatically
