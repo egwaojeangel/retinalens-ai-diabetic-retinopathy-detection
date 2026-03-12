@@ -1,265 +1,217 @@
-# 👁️ RetinaLens AI — Diabetic Retinopathy Detection
+# ⚡ SkillBridge — AI-Powered Career Gap Analyser
 
-![Python](https://img.shields.io/badge/Python-3.10+-blue?style=flat-square&logo=python)
-![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-ee4c2c?style=flat-square&logo=pytorch)
+![Python](https://img.shields.io/badge/Python-3.8+-blue?style=flat-square&logo=python)
 ![Flask](https://img.shields.io/badge/Flask-3.x-black?style=flat-square&logo=flask)
-![Accuracy](https://img.shields.io/badge/Accuracy-64.9%25-blue?style=flat-square)
-![F1](https://img.shields.io/badge/Macro%20F1-58.79%25-blue?style=flat-square)
-![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)
+![Groq](https://img.shields.io/badge/Groq-Llama%203.3%2070B-00a67e?style=flat-square&logo=meta)
+![Industry](https://img.shields.io/badge/Works%20For-Any%20Industry-2dd4bf?style=flat-square)
+![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 
-**Core Stack:** Python · PyTorch · EfficientNet-B4 · Flask · Grad-CAM · OpenCV
+**Core Stack:** Python · Flask · Groq API · Llama 3.3 70B · PyMuPDF · HTML · Tailwind CSS
 
-An end-to-end deep learning system for **automated diabetic retinopathy severity grading** from fundus photographs, trained on **115,241 real clinical images** from three major datasets. Deployed as a full hospital management web application with **Grad-CAM explainability**, retinal image validation, and a 5-class severity grading system.
-
-![RetinaLens Demo](https://drive.google.com/uc?export=view&id=1HSe-0Kkr1bgMlZcRfFqL_rmE7-rr5ZMB)
+An end-to-end AI web application that analyses your CV against any job description and delivers a **comprehensive, personalised career gap report in under 20 seconds** — for any role in any industry. Upload your CV, paste the job description, and get an instant skill gap breakdown, learning roadmap, salary insights, and actionable CV improvement tips.
 
 ---
 
 ## 📋 Table of Contents
-- [Results](#results)
+- [Features](#features)
 - [How to Run](#how-to-run)
 - [Overview](#overview)
-- [Dataset](#dataset)
-- [Methodology](#methodology)
-- [Model Architecture](#model-architecture)
-- [Training Details](#training-details)
-- [Grad-CAM Explainability](#explainability-with-grad-cam)
-- [Web Application](#web-application)
-- [Watch The Full Demo Video](#demo-video)
+- [How the AI Works](#how-the-ai-works)
+- [Analysis Output](#analysis-output)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Getting a Free Groq API Key](#getting-a-free-groq-api-key)
+- [Deployment](#deployment)
 - [Limitations](#limitations)
 - [Future Work](#future-work)
 - [Disclaimer](#disclaimer)
 
 ---
 
-## Results
+## Features
 
-Trained for 16 epochs on 115,241 fundus images across three clinical datasets. Performance is consistent with published research on this task, a 5-class DR grading on real clinical data is an inherently difficult problem.
-
-| Metric | Score |
-|---|---|
-| Validation Accuracy | **64.9%** |
-| Macro F1 Score | **58.79%** |
-| Best Epoch | Epoch 14 |
-| Training Images | 115,241 |
-
-### Per-Class F1 at Best Epoch
-
-| Grade | Class | F1 Score |
-|---|---|---|
-| Grade 0 | No DR | 0.775 |
-| Grade 1 | Mild | 0.461 |
-| Grade 2 | Moderate | 0.488 |
-| Grade 3 | Severe | 0.511 |
-| Grade 4 | Proliferative | 0.631 |
-
-> Published benchmarks on the same combined dataset (EyePACS + APTOS + MESSIDOR) report 60–70% accuracy for 5-class grading — results here are within that range.
+- **Instant Skill Gap Analysis** — See exactly which skills you have and which you're missing for the target role
+- **Overall Match Score** — A 0–100% compatibility score with animated visual breakdown
+- **Personalised Learning Roadmap** — Step-by-step plan with free and paid resources, real links, and time estimates
+- **CV Improvement Tips** — Specific, actionable advice to strengthen your CV for the exact role you're targeting
+- **Salary Insights** — Realistic salary ranges from entry through senior level
+- **Experience Gap Analysis** — Honest assessment of your experience vs what the role requires
+- **Career Strategy Advice** — 5 tailored tips from the AI career coach
+- **Alternative Role Suggestions** — Similar roles you might be a stronger match for right now
+- **Works for ANY industry** — Tech, medicine, law, finance, engineering, design, education, arts, hospitality and more
+- **PDF & DOCX Support** — Upload your CV in any format or paste the text directly
+- **User Authentication** — Register and sign in with email and password (localStorage)
+- **Dark / Light Mode** — Sleek dark UI by default with light mode toggle
+- **Fully Responsive** — Works on desktop and mobile
 
 ---
 
 ## How to Run
 
 ### Prerequisites
-- Python 3.10 or higher
-- Git
+- Python 3.8 or higher
+- A free [Groq API key](https://console.groq.com) — takes 2 minutes to get
 
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/egwaojeangel/diabetic_retinopathy_detection_using_efficientnet.git
-cd diabetic_retinopathy_detection_using_efficientnet
+git clone https://github.com/egwaojeangel/skillbridge-ai.git
+cd skillbridge-ai
 ```
 
-### 2. Create a virtual environment
-
-```bash
-python -m venv venv
-
-# Windows
-venv\Scripts\activate
-
-# Mac/Linux
-source venv/bin/activate
-```
-
-### 3. Install dependencies
+### 2. Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Download the model weights
+### 3. Add your Groq API key
 
-Download `best_model.pth` from the Kaggle output tab of the training notebook and place it in the repo root.
+Open `run.py` and replace the placeholder:
 
-### 5. Run the web application
-
-```bash
-python webapp.py
+```python
+os.environ['GROQ_API_KEY'] = 'your-groq-api-key-here'
 ```
 
-Open your browser at: **http://127.0.0.1:5000**
+### 4. Run the application
+
+```bash
+python run.py
+```
+
+Open your browser at: **http://localhost:5000**
 
 ---
 
 ## Overview
 
-Diabetic retinopathy is one of the leading causes of preventable blindness worldwide, affecting over 100 million people with diabetes. Manual grading of fundus images is time-consuming and requires trained ophthalmologists, which is a resource not always available in underserved regions.
+Millions of people apply to jobs every year without knowing exactly why they keep getting rejected. The problem is rarely that they're unqualified — it's that they don't know which specific skills are missing, how to close those gaps, or how to present what they already have more effectively.
 
-This project builds an end-to-end screening pipeline that:
-- Grades DR severity across **5 clinical stages** automatically
-- Uses **Grad-CAM** to show which retinal regions drove each prediction
-- Validates that uploaded images are actual fundus photographs before running inference
-- Presents results inside a full **hospital management interface** with patient records, analytics, and clinical recommendations
+SkillBridge solves this by acting as a personal AI career coach that:
 
-### DR Severity Classes
+- Reads your CV and the job description simultaneously
+- Identifies **specific skill gaps** with honest importance ratings (critical / important / nice-to-have)
+- Builds a **step-by-step learning roadmap** with real resources tailored to the industry
+- Gives **salary context** so you know what the role is worth before you apply
+- Tells you **exactly how to rewrite your CV** to improve your chances for that specific role
+- Suggests **alternative roles** you might already be ready for
 
-| Grade | Stage | Recommendation |
-|---|---|---|
-| 0 | No DR | Routine annual screening |
-| 1 | Mild | Optimise blood sugar control, re-screen in 12 months |
-| 2 | Moderate | Refer to ophthalmologist, re-screen in 6 months |
-| 3 | Severe | Urgent ophthalmology referral within 4 weeks |
-| 4 | Proliferative DR | Immediate referral — risk of vision loss |
+The system is industry-agnostic by design. The same pipeline that analyses a Software Engineer's CV against a job description works equally well for a Nurse, a Tax Lawyer, a UX Designer, or a Civil Engineer — the AI adapts its advice to the specific field.
 
 ---
 
-## Dataset
+## How the AI Works
 
-Training used a combined dataset of three major clinical sources:
+When a CV and job description are submitted, the backend sends both to **Llama 3.3 70B** — Meta's most capable open-source model, served via Groq's ultra-fast inference API — with a detailed system prompt instructing it to act as a world-class career coach.
 
-| Dataset | Description |
+The model is prompted to return a **structured JSON object** containing all analysis fields, which the frontend parses and renders into the results dashboard.
+
+The AI is explicitly instructed to:
+- Tailor all advice to the **specific industry** — never give generic tech advice for a healthcare or legal role
+- Be **honest** about gaps while remaining constructive and encouraging
+- Suggest **real, named resources** that are actually relevant to the field
+- Provide **concrete, actionable** next steps the user can take this week
+- Grade skill importance as **critical, important, or nice-to-have** — not just a flat list
+
+### Why Groq + Llama 3.3 70B
+
+| Factor | Detail |
 |---|---|
-| EyePACS | Large-scale US screening programme |
-| APTOS 2019 | Kaggle competition dataset from India |
-| MESSIDOR | French ophthalmology research dataset |
+| Model | Llama 3.3 70B (Meta) |
+| Inference Speed | ~500 tokens/second via Groq |
+| Cost | Free tier — no credit card required |
+| Quality | Competitive with GPT-4 class models on structured tasks |
+| Response Time | 10–20 seconds per full analysis |
 
-| Split | Images |
+---
+
+## Analysis Output
+
+Every analysis returns the following sections:
+
+| Section | What It Contains |
 |---|---|
-| Training | ~92,000 |
-| Validation | ~23,000 |
-| **Total** | **115,241** |
-
-> ⚠️ Dataset not included in this repository due to size and licensing.  
-> Available at: [Kaggle – EyePACS + APTOS + MESSIDOR](https://www.kaggle.com/datasets/ascanipek/eyepacs-aptos-messidor-diabetic-retinopathy)
-
----
-
-## Methodology
-
-### Image Preprocessing
-- Resized to **260 × 260 pixels** (EfficientNet-B4 input size)
-- RGB format with ImageNet normalisation
-- Tensor conversion via PyTorch transforms
-
-### Data Augmentation (Training Only)
-- Random horizontal and vertical flipping
-- Random rotation (±15°)
-- Brightness, contrast, and saturation jitter
-- Random affine transforms
-
-### Retinal Image Validation
-Before inference, images are validated as genuine fundus photographs using three checks:
-1. **Dark border / bright centre** — fundus images always have a black background with a bright circular retinal disc
-2. **Circular region detection** — the retinal disc must occupy at least 20% of the image
-3. **Red/orange colour profile** — fundus images have a characteristic warm colour tone
-
-Non-fundus images are rejected before reaching the model.
+| **Overall Match Score** | 0–100% compatibility with animated ring |
+| **Summary** | 2–3 sentence honest assessment of candidacy |
+| **Strengths** | Skills you already have with proficiency bars |
+| **Skill Gaps** | Missing skills rated critical / important / nice-to-have |
+| **Experience Analysis** | Required vs estimated years with honest advice |
+| **Learning Roadmap** | Step-by-step plan with resources, duration, and free/paid tags |
+| **Career Advice** | 5 strategic tips tailored to the role and industry |
+| **Do This Week** | 3 concrete immediate actions |
+| **CV Improvement Tips** | 6 specific suggestions to strengthen the CV for this role |
+| **Salary Insight** | Entry, mid, and senior salary ranges |
+| **Alternative Roles** | 3–6 similar roles with match scores |
 
 ---
 
-## Model Architecture
+## Tech Stack
 
-**EfficientNet-B4** — pretrained on ImageNet, fine-tuned for 5-class DR grading.
-
-| Component | Detail |
+| Layer | Technology |
 |---|---|
-| Backbone | EfficientNet-B4 (timm) |
-| Input Size | 260 × 260 |
-| Output Classes | 5 |
-| Dropout | 0.4 |
-| Drop Path Rate | 0.2 |
-| Pretrained | ImageNet |
-
-EfficientNet scales network depth, width, and input resolution simultaneously using a compound coefficient. B4 was chosen for its higher capacity to capture fine retinal features such as microaneurysms, haemorrhages, and neovascularisation.
-
----
-
-## Training Details
-
-| Parameter | Value |
-|---|---|
-| Framework | PyTorch + timm |
-| Loss Function | Cross-Entropy Loss |
-| Optimizer | AdamW |
-| Learning Rate | 1e-4 |
-| Scheduler | CosineAnnealingLR |
-| Epochs Completed | 16 / 50 (Kaggle timeout) |
-| Best Epoch | 14 |
-| Early Stopping Patience | 10 |
-| Batch Size | 32 |
-| Hardware | Kaggle GPU (P100) |
-| Training Time | ~12 hours |
-
-Training was run on Kaggle with a 12-hour GPU session limit. Early stopping patience was at 2/10 when the session timed out, indicating the model was still learning.
+| Frontend | HTML5, CSS3, Tailwind CSS (CDN), Vanilla JavaScript |
+| Backend | Python 3.8+, Flask, Flask-CORS |
+| AI Model | Llama 3.3 70B via Groq API |
+| PDF Parsing | PyMuPDF (fitz) |
+| DOCX Parsing | python-docx |
+| Auth | Browser localStorage (client-side) |
+| Fonts | Plus Jakarta Sans (Google Fonts) |
+| Icons | Font Awesome 6 |
 
 ---
 
-## Explainability with Grad-CAM
+## Project Structure
 
-A proper **Grad-CAM** implementation is integrated using forward and backward hooks on EfficientNet-B4's last convolutional block.
-
-### How it works
-
-1. Forward hook saves feature map activations from the last conv block
-2. Backward hook saves gradients flowing into that layer
-3. Gradients are globally average-pooled to produce per-channel importance weights
-4. Activations are weighted and summed → ReLU → normalised to [0, 1]
-5. CAM is resized to the original image dimensions
-6. An **eye mask** is applied — the CAM is zeroed outside the retinal disc before the JET colormap is applied, preventing hotspots from bleeding into the black background
-7. The masked heatmap is blended onto the original fundus image
-
-This approach follows the original Grad-CAM paper (Selvaraju et al., 2017) and allows clinical users to verify the model is attending to meaningful retinal structures.
-
----
-
-## Web Application
-
-A full **hospital management interface** built with Flask + TailwindCSS:
-
-- 🔐 Secure login system
-- 👥 Patient record management
-- 🔬 AI retinal scan analysis with Grad-CAM visualisation
-- 📊 Probability distribution chart per prediction
-- 📋 Clinical recommendations per DR grade
-- 📈 Analytics dashboard with disease distribution
-- ⚠️ Medical disclaimer on all AI outputs
-
-```bash
-python webapp.py
+```
+skillbridge-ai/
+├── app.py              # Flask backend — routes, file parsing, Groq API call
+├── run.py              # Entry point — sets API key, starts server
+├── index.html          # Complete frontend — single-file UI
+├── requirements.txt    # Python dependencies
+└── README.md           # This file
 ```
 
-### Demo Video
+---
 
-[![Watch the Demo](images/login_page.png)](https://drive.google.com/file/d/1xroETJz2pSxljJKXd7kL7IyyaRJQn3lQ/view?usp=sharing)
+## Getting a Free Groq API Key
 
-Click the thumbnail above to watch the full system demo.
+1. Go to [console.groq.com](https://console.groq.com)
+2. Sign up for a free account (no credit card needed)
+3. Navigate to **API Keys** → **Create API Key**
+4. Copy the key and paste it into `run.py`
+
+Groq's free tier provides generous rate limits — more than enough for personal use, demos, and portfolio showcasing.
+
+---
+
+## Deployment
+
+This app requires a running Python backend and **cannot be hosted on GitHub Pages** (which serves static files only).
+
+### Free deployment on Render
+
+1. Push this repo to GitHub
+2. Go to [render.com](https://render.com) → **New → Web Service**
+3. Connect your GitHub repository
+4. Set the following:
+   - **Build Command:** `pip install -r requirements.txt`
+   - **Start Command:** `python run.py`
+5. Add an **Environment Variable:** `GROQ_API_KEY = your-key-here`
+6. Click **Deploy**
+
+You will get a live public URL (e.g. `skillbridge-ai.onrender.com`) in approximately 5 minutes. The free tier is sufficient for demo and portfolio use.
 
 ---
 
 ## Requirements
 
 ```
-torch
-torchvision
-timm
 flask
 flask-cors
-numpy
-Pillow
-opencv-python
-scikit-learn
-matplotlib
+groq
+pymupdf
+python-docx
+python-dotenv
 ```
 
 ```bash
@@ -270,37 +222,39 @@ pip install -r requirements.txt
 
 ## Limitations
 
-- Trained on preprocessed images — performance may vary on raw clinical fundus photos
-- Session timed out at epoch 16/50 — model likely underfit relative to its potential
-- No external test set evaluation beyond the validation split
-- No cross-dataset generalisation study
-- Not validated by clinical ophthalmologists
-- Not approved for clinical use
+- CV parsing quality depends on formatting — heavily stylised CVs (columns, tables, graphics) may not parse cleanly from PDF
+- No persistent database — user accounts and analysis history are stored in browser localStorage only and will not persist across devices
+- Llama 3.3 70B may occasionally produce less nuanced advice for very niche or highly specialised roles compared to larger proprietary models
+- The app requires a live backend — it cannot be hosted as a static site
+- No rate limiting implemented — not suitable for high-traffic public deployment without adding request throttling
+- Salary data is AI-estimated and may not reflect current market rates in all regions
 
 ---
 
 ## Future Work
 
-- Resume training to full 50 epochs with class-weighted loss
-- External validation on unseen datasets (Messidor-2, DIARETDB)
-- Larger EfficientNet variants or Vision Transformer backbone
-- Cloud deployment (Hugging Face Spaces / Render)
-- Structured clinical report generation per patient
+- [ ] Export full analysis as a PDF report
+- [ ] Save and compare multiple analyses per user
+- [ ] LinkedIn profile URL input — auto-parse CV from profile
+- [ ] Job board integration — auto-fetch job descriptions from URL
+- [ ] Backend database for persistent user accounts
+- [ ] Rate limiting and usage quotas for public deployment
+- [ ] Email delivery of analysis results
+- [ ] CV rewrite assistant — full AI-powered CV editor
 
 ---
 
 ## Disclaimer
 
-> ⚠️ This AI system is intended **solely to assist qualified healthcare professionals** and does not replace clinical judgement. All outputs must be reviewed and validated by a licensed medical professional before being used in any clinical decision-making process.
+> ⚠️ SkillBridge is an AI-assisted career tool intended to **support and inform** job seekers. It does not guarantee employment outcomes. All AI-generated advice should be critically reviewed and adapted to your personal circumstances. Salary figures are estimates based on AI knowledge and may not reflect current market rates in your region.
 
 ---
 
 ## Author
 
-**Angel Egwaoje**  
+**Angel Egwaoje**
 
-Machine Learning Engineer | Medical Imaging & Computer Vision  
-
+Machine Learning Engineer | AI Applications & Full-Stack Development
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/angel-egwaoje-416927280)
 [![GitHub](https://img.shields.io/badge/GitHub-Follow-black?style=flat-square&logo=github)](https://github.com/egwaojeangel)
